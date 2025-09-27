@@ -78,7 +78,7 @@ const Navigation = ({ isSidebarOpen, setSidebarOpen }) => {
     <>
       {/* Desktop Navigation */}
       <nav style={{ backgroundColor: '#00d5b1' }} className="text-white hidden md:block">
-        <div className="container mx-auto px-4">
+        <div className="mx-auto px-4">
           <div className="flex justify-between items-center">
             {/* Left: Logo */}
             <div className="flex-1 flex justify-start">
@@ -97,9 +97,9 @@ const Navigation = ({ isSidebarOpen, setSidebarOpen }) => {
                     <li key={item.path}>
                       <Link
                         to={item.path}
-                        className={`hover:bg-teal-700 px-3 py-2 rounded-md font-medium flex items-center transition-colors ${
+                        className={`hover:bg-teal-700 px-3 py-2 rounded-md font-medium flex items-center transition-colors whitespace-nowrap ${
                           isActive ? 'bg-teal-700' : ''
-                        }`}
+                        } ml-8`}
                       >
                         <Icon className="mr-1 w-4 h-4" />
                         {item.label}
@@ -111,13 +111,13 @@ const Navigation = ({ isSidebarOpen, setSidebarOpen }) => {
             </div>
 
             {/* Right: User Info & Logout */}
-            <div className="flex-1 flex justify-end items-center space-x-4">
+            <div className="flex justify-end items-center space-x-4">
               {user && (
                 <>
                   <div className="flex items-center space-x-2">
                     <User className="w-4 h-4" />
-                    <span className="text-sm">{user.name}</span>
-                    <span className="bg-teal-600 px-2 py-1 rounded text-xs capitalize">
+                    <span className="text-sm whitespace-nowrap">{user.name}</span>
+                    <span className="bg-teal-600 px-2 py-1 rounded text-xs capitalize whitespace-nowrap">
                       {user.userType}
                     </span>
                   </div>

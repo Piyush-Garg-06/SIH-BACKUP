@@ -4,10 +4,10 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const images = [
   'https://ehealth.kerala.gov.in/themes/medicare_zymphonies_theme/images/slider/ehk1.jpg',
-  'https://images.unsplash.com/photo-1581056781163-c76d58623528?q=80&w=1887&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+  'https://www.shutterstock.com/image-photo/mumbaiindia-may-21-2020-migrant-260nw-1737637544.jpg',
   'https://images.unsplash.com/photo-1603398938378-e54eab446dde?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
   'https://images.unsplash.com/photo-1580281657527-47f249e8f4df?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-  'https://images.unsplash.com/photo-1602216056096-3b404039b790?q=80&w=1932&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
+  'https://media.licdn.com/dms/image/v2/D5612AQE7sVM_3r_O_A/article-cover_image-shrink_600_2000/article-cover_image-shrink_600_2000/0/1731308802534?e=2147483647&v=beta&t=Gx925d4pawBnJUwwDWEq9s3Jz42SUS4YChNTNzCLgus'
 ];
 
 const kenBurnsAnimations = [
