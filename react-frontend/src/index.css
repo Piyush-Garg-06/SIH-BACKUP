@@ -1,0 +1,20 @@
+@import "tailwindcss";
+
+.hero-gradient {
+  background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #3b82f6 100%);
+}
+
+.govt-card {
+  border-left: 4px solid #2563eb;
+  transition: all 0.3s ease;
+}
+
+.govt-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.language-selector {
+  background-color: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(5px);
+}
