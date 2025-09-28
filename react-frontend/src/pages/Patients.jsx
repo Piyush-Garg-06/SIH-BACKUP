@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   Users, Search, Filter, User, MapPin, Calendar,
   AlertTriangle, CheckCircle, Clock, Phone, Mail,
-  Stethoscope, FileText, Eye, Edit, Plus
+  Stethoscope, FileText, Eye, Edit, Plus, UserPlus, UserMinus
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import api from '../utils/api';
@@ -80,11 +80,9 @@ const Patients = () => {
 
   const getSeverityColor = (severity) => {
     switch (severity) {
-      case 'critical': return 'bg-red-100 text-red-800 border-red-200';
-      case 'high': return 'bg-orange-100 text-orange-800 border-orange-200';
-      case 'moderate': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'normal': return 'bg-green-100 text-green-800 border-green-200';
-      case 'low': return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'high': return 'bg-red-100 text-red-800 border-red-200';
+      case 'moderate': return 'bg-orange-100 text-orange-800 border-orange-200';
+      case 'low': return 'bg-green-100 text-green-800 border-green-200';
       default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
@@ -105,17 +103,17 @@ const Patients = () => {
       (patient.employer && patient.employer.toLowerCase().includes(searchTerm.toLowerCase()));
 
     const matchesFilter = filter === 'all' || patient.status === filter;
-    const matchesSeverity = severityFilter === 'all' || patient.severity === severityFilter;
-    // Disease filter is handled on the backend now
+    // Remove the frontend severity filtering since it's now handled by the backend
+    // const matchesSeverity = severityFilter === 'all' || patient.severity === severityFilter;
 
-    return matchesSearch && matchesFilter && matchesSeverity;
+    return matchesSearch && matchesFilter; // && matchesSeverity;
   });
 
   const stats = {
     total: patients.length,
     active: patients.filter(p => p.status === 'active').length,
-    critical: patients.filter(p => p.severity === 'critical' || p.status === 'critical').length,
-    normal: patients.filter(p => p.severity === 'normal').length
+    critical: patients.filter(p => p.severity === 'high').length,
+    normal: patients.filter(p => p.severity === 'low').length
   };
 
   if (loading) {
@@ -154,12 +152,6 @@ const Patients = () => {
             <div>
               <h1 className="text-3xl font-bold text-blue-900">My Patients</h1>
               <p className="text-gray-600 mt-1">Manage and monitor migrant worker patients</p>
-            </div>
-            <div className="flex items-center space-x-4">
-              <button className="bg-blue-600 text-white px-4 py-2 rounded-md font-medium hover:bg-blue-700 transition-colors">
-                <Plus className="w-5 h-5 inline mr-2" />
-                Add New Patient
-              </button>
             </div>
           </div>
         </div>
@@ -244,11 +236,9 @@ const Patients = () => {
                   className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="all">All Levels</option>
-                  <option value="critical">Critical</option>
-                  <option value="high">High</option>
-                  <option value="moderate">Moderate</option>
-                  <option value="normal">Normal</option>
                   <option value="low">Low</option>
+                  <option value="moderate">Moderate</option>
+                  <option value="high">High</option>
                 </select>
               </div>
 
@@ -260,13 +250,10 @@ const Patients = () => {
                   className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="all">All Diseases</option>
-                  <option value="diabetes">Diabetes</option>
-                  <option value="hypertension">Hypertension</option>
-                  <option value="asthma">Asthma</option>
-                  <option value="cardiac">Cardiac Issues</option>
-                  <option value="respiratory">Respiratory</option>
-                  <option value="skin">Skin Conditions</option>
-                  <option value="injury">Injuries</option>
+                  <option value="infectious">Infectious</option>
+                  <option value="non infectious">Non Infectious</option>
+                  <option value="communicable">Communicable</option>
+                  <option value="non communicable">Non Communicable</option>
                 </select>
               </div>
             </div>
@@ -375,8 +362,7 @@ const Patients = () => {
             <p className="text-gray-600">
               {searchTerm || filter !== 'all' || severityFilter !== 'all'
                 ? 'Try adjusting your search or filter criteria.'
-                : 'You have no assigned patients at the moment.'
-              }
+                : 'You have no assigned patients at the moment.'}
             </p>
           </div>
         )}

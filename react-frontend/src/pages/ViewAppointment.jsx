@@ -13,6 +13,24 @@ const ViewAppointment = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Make fetchAppointment available outside useEffect
+  const fetchAppointment = async () => {
+    try {
+      setLoading(true);
+      // Fetch the specific appointment by ID
+      console.log('Fetching appointment with ID:', appointmentId);
+      const res = await api.get(`/appointments/${appointmentId}`);
+      console.log('Appointment data received:', res);
+      setAppointment(res.data);
+    } catch (err) {
+      console.error('Error fetching appointment:', err);
+      setError('Failed to load appointment details.');
+      toast.error('Failed to load appointment details.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     console.log('ViewAppointment component mounted with appointmentId:', appointmentId);
     
@@ -21,27 +39,36 @@ const ViewAppointment = () => {
       return;
     }
 
-    const fetchAppointment = async () => {
-      try {
-        setLoading(true);
-        // Fetch the specific appointment by ID
-        console.log('Fetching appointment with ID:', appointmentId);
-        const res = await api.get(`/appointments/${appointmentId}`);
-        console.log('Appointment data received:', res);
-        setAppointment(res.data);
-      } catch (err) {
-        console.error('Error fetching appointment:', err);
-        setError('Failed to load appointment details.');
-        toast.error('Failed to load appointment details.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     if (appointmentId) {
       fetchAppointment();
     }
   }, [user, navigate, appointmentId]);
+
+  const handleAcceptAppointment = async () => {
+    try {
+      await api.put(`/appointments/${appointmentId}/accept`);
+      // Instead of setting the appointment directly, fetch the updated appointment data
+      // This ensures we have the latest status from the server
+      await fetchAppointment();
+      toast.success('Appointment accepted successfully');
+    } catch (err) {
+      console.error('Error accepting appointment:', err);
+      toast.error('Failed to accept appointment');
+    }
+  };
+
+  const handleRejectAppointment = async () => {
+    try {
+      await api.put(`/appointments/${appointmentId}/reject`);
+      // Instead of setting the appointment directly, fetch the updated appointment data
+      // This ensures we have the latest status from the server
+      await fetchAppointment();
+      toast.success('Appointment rejected successfully');
+    } catch (err) {
+      console.error('Error rejecting appointment:', err);
+      toast.error('Failed to reject appointment');
+    }
+  };
 
   if (loading) {
     return (
@@ -94,6 +121,10 @@ const ViewAppointment = () => {
     );
   }
 
+  // Check if the current user is a doctor and the appointment is pending
+  const isDoctor = user && user.role === 'doctor';
+  const isPending = appointment.status === 'pending';
+
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-md">
@@ -117,6 +148,7 @@ const ViewAppointment = () => {
               appointment.status === 'scheduled' ? 'bg-blue-100 text-blue-800' :
               appointment.status === 'completed' ? 'bg-green-100 text-green-800' :
               appointment.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+              appointment.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
               'bg-gray-100 text-gray-800'
             }`}>
               {appointment.status || 'Pending'}
@@ -205,24 +237,29 @@ const ViewAppointment = () => {
             >
               View All Appointments
             </button>
-            <button
-              onClick={() => {
-                // Here you would implement the accept appointment functionality
-                toast.info('Appointment acceptance functionality would be implemented here');
-              }}
-              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md"
-            >
-              Accept Appointment
-            </button>
-            <button
-              onClick={() => {
-                // Here you would implement the reject appointment functionality
-                toast.info('Appointment rejection functionality would be implemented here');
-              }}
-              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md"
-            >
-              Reject Appointment
-            </button>
+            {/* Actual buttons */}
+            {(isDoctor && isPending) && (
+              <>
+                <button
+                  onClick={handleAcceptAppointment}
+                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md"
+                >
+                  Accept Appointment
+                </button>
+                <button
+                  onClick={handleRejectAppointment}
+                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md"
+                >
+                  Reject Appointment
+                </button>
+              </>
+            )}
+            {/* Message when buttons are not shown */}
+            {isDoctor && !isPending && (
+              <div className="p-2 bg-gray-200 rounded">
+                <p className="text-sm text-gray-600">Appointment is not pending (status: {appointment?.status})</p>
+              </div>
+            )}
           </div>
         </div>
       </div>

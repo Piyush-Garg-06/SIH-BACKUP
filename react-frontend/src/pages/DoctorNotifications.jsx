@@ -67,13 +67,30 @@ const DoctorNotifications = () => {
   const handleDeleteNotification = async (notificationId) => {
     try {
       console.log('Deleting notification with ID:', notificationId);
-      await api.delete(`/notifications/${notificationId}`);
-      // Remove the notification from the state
+      
+      // Check if this is a database notification (has _id) or a mock notification (prefixed ID)
+      if (notificationId.toString().startsWith('app-') || 
+          notificationId.toString().startsWith('rec-') ||
+          notificationId.toString().startsWith('scheme-')) {
+        // This is a mock notification, just remove it from the UI
+        console.log('Removing mock notification from UI');
+        setNotifications(notifications.filter(notification => 
+          notification.id !== notificationId
+        ));
+      } else {
+        // This is a database notification, delete it from the backend
+        await api.delete(`/notifications/${notificationId}`);
+        // Remove the notification from the state
+        setNotifications(notifications.filter(notification => 
+          notification.id !== notificationId
+        ));
+      }
+    } catch (err) {
+      console.error('Error deleting notification:', err);
+      // Even if there's an error, remove it from the UI for better UX
       setNotifications(notifications.filter(notification => 
         notification.id !== notificationId
       ));
-    } catch (err) {
-      console.error('Error deleting notification:', err);
       // Optionally show an error message to the user
     }
   };
@@ -220,6 +237,7 @@ const DoctorNotifications = () => {
                     </div>
 
                     <div className="flex items-center space-x-2">
+                      {/* Keep the action button for doctors but ensure delete works */}
                       {notification.actionUrl && (
                         <button
                           onClick={() => {
@@ -247,6 +265,7 @@ const DoctorNotifications = () => {
                         <X className="w-5 h-5" />
                       </button>
                     </div>
+
                   </div>
                 </div>
               </div>

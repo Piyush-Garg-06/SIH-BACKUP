@@ -220,6 +220,130 @@ class NotificationService {
       throw error;
     }
   }
+
+  // Send appointment accepted notification to worker
+  async sendAppointmentAcceptedNotification(workerUser, worker, appointmentDetails, appointmentId) {
+    try {
+      console.log('Creating notification for worker:', workerUser._id);
+      console.log('Appointment ID:', appointmentId);
+      
+      // Create in-app notification
+      const notification = new Notification({
+        userId: workerUser._id,
+        title: 'Appointment Accepted',
+        message: `Your appointment with Dr. ${appointmentDetails.doctorName} for ${appointmentDetails.date} at ${appointmentDetails.time} has been accepted`,
+        type: 'appointment',
+        priority: 'normal',
+        actionUrl: `/appointments`,
+        actionText: 'View Appointment',
+        relatedType: 'appointment',
+        relatedId: appointmentId
+      });
+
+      const savedNotification = await notification.save();
+      console.log('Acceptance notification saved:', savedNotification._id);
+      
+      // Send email notification if enabled
+      if (this.emailTransporter && workerUser.email) {
+        const subject = 'Appointment Accepted';
+        const html = `
+          <h3>Appointment Accepted</h3>
+          <p>Dear ${worker.firstName} ${worker.lastName},</p>
+          <p>Your appointment request has been accepted with the following details:</p>
+          <ul>
+            <li><strong>Doctor:</strong> Dr. ${appointmentDetails.doctorName}</li>
+            <li><strong>Date:</strong> ${appointmentDetails.date}</li>
+            <li><strong>Time:</strong> ${appointmentDetails.time}</li>
+            <li><strong>Hospital:</strong> ${appointmentDetails.hospital}</li>
+          </ul>
+          <p>Please arrive 15 minutes before the scheduled time.</p>
+          <p>Best regards,<br>Digital Health Record Management System</p>
+        `;
+
+        try {
+          await this.sendEmail(workerUser.email, subject, html);
+        } catch (error) {
+          console.error('Failed to send appointment acceptance email to worker:', error);
+        }
+      }
+
+      // Send SMS notification if enabled
+      if (this.twilioClient && workerUser.mobile) {
+        const smsMessage = `Appointment Accepted: Dear ${worker.firstName}, your appointment with Dr. ${appointmentDetails.doctorName} for ${appointmentDetails.date} at ${appointmentDetails.time} has been accepted.`;
+
+        try {
+          await this.sendSMS(workerUser.mobile, smsMessage);
+        } catch (error) {
+          console.error('Failed to send appointment acceptance SMS to worker:', error);
+        }
+      }
+
+      console.log('Appointment acceptance notification sent to worker');
+      return savedNotification;
+    } catch (error) {
+      console.error('Error creating acceptance notification:', error);
+      throw error;
+    }
+  }
+
+  // Send appointment rejected notification to worker
+  async sendAppointmentRejectedNotification(workerUser, worker, appointmentDetails, appointmentId) {
+    try {
+      console.log('Creating rejection notification for worker:', workerUser._id);
+      console.log('Appointment ID:', appointmentId);
+      
+      // Create in-app notification
+      const notification = new Notification({
+        userId: workerUser._id,
+        title: 'Appointment Rejected',
+        message: `Your appointment with Dr. ${appointmentDetails.doctorName} for ${appointmentDetails.date} at ${appointmentDetails.time} has been rejected`,
+        type: 'appointment',
+        priority: 'normal',
+        actionUrl: `/appointments`,
+        actionText: 'View Appointment',
+        relatedType: 'appointment',
+        relatedId: appointmentId
+      });
+
+      const savedNotification = await notification.save();
+      console.log('Rejection notification saved:', savedNotification._id);
+      
+      // Send email notification if enabled
+      if (this.emailTransporter && workerUser.email) {
+        const subject = 'Appointment Rejected';
+        const html = `
+          <h3>Appointment Rejected</h3>
+          <p>Dear ${worker.firstName} ${worker.lastName},</p>
+          <p>Unfortunately, your appointment request with Dr. ${appointmentDetails.doctorName} for ${appointmentDetails.date} at ${appointmentDetails.time} has been rejected.</p>
+          <p>You can schedule another appointment or contact the hospital directly for more information.</p>
+          <p>Best regards,<br>Digital Health Record Management System</p>
+        `;
+
+        try {
+          await this.sendEmail(workerUser.email, subject, html);
+        } catch (error) {
+          console.error('Failed to send appointment rejection email to worker:', error);
+        }
+      }
+
+      // Send SMS notification if enabled
+      if (this.twilioClient && workerUser.mobile) {
+        const smsMessage = `Appointment Rejected: Dear ${worker.firstName}, your appointment with Dr. ${appointmentDetails.doctorName} for ${appointmentDetails.date} at ${appointmentDetails.time} has been rejected.`;
+
+        try {
+          await this.sendSMS(workerUser.mobile, smsMessage);
+        } catch (error) {
+          console.error('Failed to send appointment rejection SMS to worker:', error);
+        }
+      }
+
+      console.log('Appointment rejection notification sent to worker');
+      return savedNotification;
+    } catch (error) {
+      console.error('Error creating rejection notification:', error);
+      throw error;
+    }
+  }
 }
 
 export default new NotificationService();

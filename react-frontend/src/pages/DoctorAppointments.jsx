@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/useAuth';
 import api from '../utils/api';
-import { Calendar as CalendarIcon, Clock, Stethoscope, User, Hospital } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, Stethoscope, User, Hospital, Eye } from 'lucide-react';
 import { toast } from 'react-toastify';
 
 const DoctorAppointments = () => {
@@ -74,18 +74,30 @@ const DoctorAppointments = () => {
                   <span className={`px-3 py-1 rounded-full text-sm font-medium ${
                     appointment.status === 'scheduled' ? 'bg-blue-100 text-blue-800' :
                     appointment.status === 'completed' ? 'bg-green-100 text-green-800' :
+                    appointment.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                    appointment.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
                     'bg-gray-100 text-gray-800'
                   }`}>
                     {appointment.status}
                   </span>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-700">
-                  <p className="flex items-center"><User className="w-4 h-4 mr-2" /> Patient: {appointment.worker.firstName} {appointment.worker.lastName}</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-700 mb-4">
+                  <p className="flex items-center"><User className="w-4 h-4 mr-2" /> Patient: {appointment.worker?.firstName} {appointment.worker?.lastName}</p>
                   <p className="flex items-center"><Stethoscope className="w-4 h-4 mr-2" /> Type: {appointment.type}</p>
                   <p className="flex items-center"><Hospital className="w-4 h-4 mr-2" /> Hospital: {appointment.hospital}</p>
                   <p className="flex items-center"><Clock className="w-4 h-4 mr-2" /> Department: {appointment.department}</p>
                   {appointment.notes && <p className="col-span-2">Notes: {appointment.notes}</p>}
+                </div>
+
+                <div className="flex justify-end">
+                  <button
+                    onClick={() => navigate(`/doctor/appointments/${appointment._id}`)}
+                    className="flex items-center bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+                  >
+                    <Eye className="w-4 h-4 mr-2" />
+                    View Details
+                  </button>
                 </div>
               </div>
             ))}

@@ -1,4 +1,3 @@
-
 import mongoose from "mongoose";
 
 const WorkerSchema = new mongoose.Schema({
@@ -32,6 +31,11 @@ const WorkerSchema = new mongoose.Schema({
   duration: { type: String },
   familyMembers: { type: Number },
   healthId: { type: String, unique: true, sparse: true },
+  // Add relationship to doctors
+  doctors: [{ 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'Doctor' 
+  }]
 });
 
 export default mongoose.model('Worker', WorkerSchema);

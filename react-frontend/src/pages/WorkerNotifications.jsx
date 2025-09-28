@@ -7,13 +7,13 @@ import {
 import { useState, useEffect } from 'react';
 import api from '../utils/api';
 
-const Notifications = () => {
+const WorkerNotifications = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [filter, setFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
 
-  if (!user) {
+  if (!user || (user.role !== 'worker' && user.role !== 'patient')) {
     navigate('/login');
     return null;
   }
@@ -124,6 +124,14 @@ const Notifications = () => {
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
+  if (loading) {
+    return <div className="text-center p-8">Loading notifications...</div>;
+  }
+
+  if (error) {
+    return <div className="text-center p-8 text-red-600">Error: {error}</div>;
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -131,7 +139,7 @@ const Notifications = () => {
         <div className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-blue-900">Notifications</h1>
+              <h1 className="text-3xl font-bold text-blue-900">Worker Notifications</h1>
               <p className="text-gray-600 mt-1">Stay updated with your health alerts and important messages</p>
             </div>
             <div className="flex items-center space-x-4">
@@ -311,4 +319,4 @@ const Notifications = () => {
   );
 };
 
-export default Notifications;
+export default WorkerNotifications;

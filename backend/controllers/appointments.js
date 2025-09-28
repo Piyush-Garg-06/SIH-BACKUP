@@ -107,6 +107,7 @@ export const getAppointmentById = async (req, res) => {
       return res.status(401).json({ msg: 'User not authorized to view this appointment' });
     }
 
+    console.log('Appointment data being sent:', appointment);
     res.json({ data: appointment });
   } catch (err) {
     console.error(err.message);
@@ -169,7 +170,11 @@ export const createAppointment = async (req, res) => {
       priority,
     });
 
+    console.log('Creating appointment with data:', newAppointment);
+    
     const appointment = await newAppointment.save();
+    
+    console.log('Appointment saved with status:', appointment.status);
     
     // Send notification to doctor if this is a worker appointment
     if (user.role === 'worker' && workerProfile && doctorUser) {
@@ -234,6 +239,126 @@ export const updateAppointment = async (req, res) => {
 
     await appointment.save();
     res.json(appointment);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+};
+
+// @route   PUT /api/appointments/:id/accept
+// @desc    Accept an appointment by doctor
+// @access  Private (Doctor only)
+export const acceptAppointment = async (req, res) => {
+  try {
+    let appointment = await Appointment.findById(req.params.id)
+      .populate('worker', 'firstName lastName user')
+      .populate('doctor', 'firstName lastName user');
+
+    if (!appointment) {
+      return res.status(404).json({ msg: 'Appointment not found' });
+    }
+
+    const user = req.user;
+    const doctorProfile = await Doctor.findOne({ user: user.id });
+
+    // Check if user is the doctor assigned to the appointment
+    const isAuthorizedDoctor = doctorProfile && appointment.doctor && 
+      appointment.doctor._id.toString() === doctorProfile._id.toString();
+
+    if (!isAuthorizedDoctor) {
+      return res.status(401).json({ msg: 'User not authorized to accept this appointment' });
+    }
+
+    // Update appointment status to 'scheduled'
+    appointment.status = 'scheduled';
+    await appointment.save();
+
+    // Send notification to worker
+    if (appointment.worker) {
+      const workerUser = await User.findById(appointment.worker.user);
+      if (workerUser) {
+        try {
+          await notificationService.sendAppointmentAcceptedNotification(
+            workerUser,
+            appointment.worker,
+            {
+              doctorName: `${appointment.doctor.firstName} ${appointment.doctor.lastName}`,
+              date: new Date(appointment.date).toLocaleDateString(),
+              time: appointment.time,
+              hospital: appointment.hospital
+            },
+            appointment._id
+          );
+        } catch (notificationError) {
+          console.error('Failed to send notification to worker:', notificationError);
+        }
+      }
+    }
+
+    res.json({ 
+      msg: 'Appointment accepted successfully', 
+      appointment 
+    });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+};
+
+// @route   PUT /api/appointments/:id/reject
+// @desc    Reject an appointment by doctor
+// @access  Private (Doctor only)
+export const rejectAppointment = async (req, res) => {
+  try {
+    let appointment = await Appointment.findById(req.params.id)
+      .populate('worker', 'firstName lastName user')
+      .populate('doctor', 'firstName lastName user');
+
+    if (!appointment) {
+      return res.status(404).json({ msg: 'Appointment not found' });
+    }
+
+    const user = req.user;
+    const doctorProfile = await Doctor.findOne({ user: user.id });
+
+    // Check if user is the doctor assigned to the appointment
+    const isAuthorizedDoctor = doctorProfile && appointment.doctor && 
+      appointment.doctor._id.toString() === doctorProfile._id.toString();
+
+    if (!isAuthorizedDoctor) {
+      return res.status(401).json({ msg: 'User not authorized to reject this appointment' });
+    }
+
+    // Update appointment status to 'cancelled'
+    appointment.status = 'cancelled';
+    await appointment.save();
+
+    // Send notification to worker
+    if (appointment.worker) {
+      const workerUser = await User.findById(appointment.worker.user);
+      if (workerUser) {
+        try {
+          await notificationService.sendAppointmentRejectedNotification(
+            workerUser,
+            appointment.worker,
+            {
+              doctorName: `${appointment.doctor.firstName} ${appointment.doctor.lastName}`,
+              date: new Date(appointment.date).toLocaleDateString(),
+              time: appointment.time,
+              hospital: appointment.hospital
+            },
+            appointment._id
+          );
+        } catch (notificationError) {
+          console.error('Failed to send notification to worker:', notificationError);
+        }
+      }
+    }
+
+    res.json({ 
+      msg: 'Appointment rejected successfully', 
+      appointment 
+    });
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server Error');
