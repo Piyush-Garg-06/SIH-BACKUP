@@ -29,6 +29,12 @@ const handleResponse = async (response) => {
     throw error;
   }
   
+  // Check if response is PDF (for health card download)
+  const contentType = response.headers.get('content-type');
+  if (contentType && contentType.includes('application/pdf')) {
+    return await response.blob();
+  }
+  
   // For 2xx responses, try to parse JSON
   try {
     const data = await response.json();

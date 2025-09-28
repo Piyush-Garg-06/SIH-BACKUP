@@ -1,42 +1,120 @@
-import { useState, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { QRCodeSVG } from 'qrcode.react';
 import { MdDownload, MdShare, MdQrCodeScanner, MdVerified } from 'react-icons/md';
 import toast, { Toaster } from 'react-hot-toast';
+import api from '../utils/api';
 
 const HealthCard = ({ user }) => {
   const { t } = useTranslation();
   const [showQR, setShowQR] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const [healthCardData, setHealthCardData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const qrRef = useRef();
 
-  // Mock health card data - in real app this would come from props/context
-  const healthCardData = {
-    uniqueId: user?.healthCardId || 'KMW-2024-001234',
-    name: user?.name || 'John Doe',
-    dob: user?.dob || '1990-01-01',
-    bloodGroup: user?.bloodGroup || 'O+',
-    emergencyContact: user?.emergencyContact || '+91-9876543210',
-    validUntil: '2025-12-31',
-    issuedDate: '2024-01-01',
-    status: 'Active'
-  };
+  useEffect(() => {
+    console.log('HealthCard component mounted with user:', user);
+    
+    const fetchHealthCardData = async () => {
+      try {
+        // Check if user object exists and has an ID
+        if (!user) {
+          console.log('No user object provided');
+          setError('No user data available');
+          setLoading(false);
+          return;
+        }
+        
+        // Get user ID (could be id or _id)
+        const userId = user._id || user.id;
+        if (!userId) {
+          console.log('User object missing ID:', user);
+          setError('User ID not found');
+          setLoading(false);
+          return;
+        }
+        
+        console.log('Fetching health card data for user ID:', userId);
+        
+        const response = await api.get(`/health-cards/${userId}`);
+        console.log('Health card API response:', response);
+        
+        // The response structure is { data: { ... } }, so we need to access response.data
+        if (response && response.data) {
+          setHealthCardData(response.data);
+          setError(null);
+        } else {
+          throw new Error('Invalid response structure from server');
+        }
+      } catch (error) {
+        console.error('Error fetching health card data:', error);
+        setError(error.message || 'Failed to load health card data');
+        toast.error('Failed to load health card data: ' + (error.message || 'Unknown error'));
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const qrData = JSON.stringify({
+    fetchHealthCardData();
+  }, [user]);
+
+  const qrData = healthCardData ? JSON.stringify({
     id: healthCardData.uniqueId,
     name: healthCardData.name,
     type: 'health-card',
     issuedBy: 'Kerala Government'
-  });
+  }) : '';
 
   const downloadQR = () => {
     const canvas = qrRef.current.querySelector('canvas');
     if (canvas) {
       const url = canvas.toDataURL('image/png');
       const link = document.createElement('a');
-      link.download = `health-card-${healthCardData.uniqueId}.png`;
+      link.download = `health-card-${healthCardData?.uniqueId || 'health-card'}.png`;
       link.href = url;
       link.click();
       toast.success('QR Code downloaded successfully!');
+    }
+  };
+
+  const downloadPDF = async () => {
+    try {
+      if (!user) {
+        toast.error('User not properly authenticated');
+        return;
+      }
+      
+      // Get user ID (could be id or _id)
+      const userId = user._id || user.id;
+      if (!userId) {
+        toast.error('User ID not found');
+        return;
+      }
+      
+      setDownloading(true);
+      const response = await api.get(`/health-cards/download/${userId}`, {
+        responseType: 'blob' // Important for handling binary data
+      });
+      
+      // Create a blob URL and trigger download
+      const blob = new Blob([response], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `health-card-${healthCardData?.uniqueId || 'health-card'}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      toast.success('Health card PDF downloaded successfully!');
+    } catch (error) {
+      console.error('Error downloading PDF:', error);
+      toast.error('Failed to download health card PDF: ' + (error.message || 'Unknown error'));
+    } finally {
+      setDownloading(false);
     }
   };
 
@@ -45,7 +123,7 @@ const HealthCard = ({ user }) => {
       try {
         await navigator.share({
           title: 'My Health Card',
-          text: `Health Card ID: ${healthCardData.uniqueId}`,
+          text: `Health Card ID: ${healthCardData?.uniqueId || ''}`,
           url: window.location.href
         });
       } catch (error) {
@@ -53,10 +131,40 @@ const HealthCard = ({ user }) => {
       }
     } else {
       // Fallback - copy to clipboard
-      navigator.clipboard.writeText(`Health Card ID: ${healthCardData.uniqueId}`);
+      navigator.clipboard.writeText(`Health Card ID: ${healthCardData?.uniqueId || ''}`);
       toast.success('Health Card ID copied to clipboard!');
     }
   };
+
+  if (loading) {
+    return (
+      <div className="max-w-4xl mx-auto p-6">
+        <div className="text-center">{t('common.loading')}</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-4xl mx-auto p-6">
+        <div className="text-center text-red-500">
+          <p>Failed to load health card data</p>
+          <p className="text-sm mt-2">Error: {error}</p>
+          {user && !(user._id || user.id) && (
+            <p className="text-sm mt-2">User object: {JSON.stringify(user)}</p>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  if (!healthCardData) {
+    return (
+      <div className="max-w-4xl mx-auto p-6">
+        <div className="text-center text-red-500">No health card data available</div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto p-6">
@@ -93,7 +201,13 @@ const HealthCard = ({ user }) => {
               </div>
               <div>
                 <p className="text-blue-100 text-sm">Emergency Contact</p>
-                <p className="text-lg">{healthCardData.emergencyContact}</p>
+                <p className="text-lg">
+                  {healthCardData.emergencyContact || 
+                   healthCardData.emergencyContactNumber || 
+                   healthCardData.emergencyContactName || 
+                   healthCardData.contact || 
+                   'N/A'}
+                </p>
               </div>
               <div>
                 <p className="text-blue-100 text-sm">Valid Until</p>
@@ -144,8 +258,17 @@ const HealthCard = ({ user }) => {
         </button>
 
         <button
+          onClick={downloadPDF}
+          disabled={downloading}
+          className="flex items-center px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50"
+        >
+          <MdDownload className="w-5 h-5 mr-2" />
+          {downloading ? 'Downloading...' : 'Download PDF'}
+        </button>
+
+        <button
           onClick={shareCard}
-          className="flex items-center px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+          className="flex items-center px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
         >
           <MdShare className="w-5 h-5 mr-2" />
           Share Card

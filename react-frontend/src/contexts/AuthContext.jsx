@@ -1,5 +1,6 @@
 import { createContext, useState, useEffect } from 'react';
 import api from '../utils/api';
+import webSocketService from '../utils/webSocketService';
 
 export const AuthContext = createContext();
 
@@ -16,8 +17,11 @@ export const AuthProvider = ({ children }) => {
           const res = await api.get('/auth/me');
           setUser(res.user);
 
-          // Load user profile based on role
+          // Connect to WebSocket service
           if (res.user) {
+            webSocketService.connect(res.user._id);
+            
+            // Load user profile based on role
             await loadUserProfile(res.user);
           }
         } catch (err) {
@@ -31,6 +35,11 @@ export const AuthProvider = ({ children }) => {
     };
 
     loadUser();
+
+    // Cleanup function
+    return () => {
+      webSocketService.disconnect();
+    };
   }, []);
 
   const loadUserProfile = async (userData) => {
@@ -75,8 +84,11 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('token', userData.token);
     setUser(userData.user);
 
-    // Load user profile after login
+    // Connect to WebSocket service
     if (userData.user) {
+      webSocketService.connect(userData.user._id);
+      
+      // Load user profile after login
       await loadUserProfile(userData.user);
     }
   };
@@ -85,6 +97,9 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('token');
     setUser(null);
     setUserProfile(null);
+    
+    // Disconnect from WebSocket service
+    webSocketService.disconnect();
   };
 
   const updateUserProfile = (updatedProfile) => {
