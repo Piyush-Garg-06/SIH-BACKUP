@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/useAuth';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Bell, CheckCircle, AlertTriangle, Info } from 'lucide-react';
+import { ArrowLeft, Bell, CheckCircle, AlertTriangle, Info, Mail, MailOpen } from 'lucide-react';
 import api from '../../utils/api';
 
 const AdminNotifications = () => {
@@ -18,11 +18,6 @@ const AdminNotifications = () => {
 
     const fetchNotifications = async () => {
       try {
-        // In a real implementation, this would fetch admin-specific notifications from the backend
-        // For now, we'll use mock data but in a real app this would be:
-        // const response = await api.get('/admin/notifications');
-        // setNotifications(response.data);
-        
         const mockNotifications = [
           {
             id: 1,
@@ -71,26 +66,13 @@ const AdminNotifications = () => {
   const getNotificationIcon = (type) => {
     switch (type) {
       case 'success':
-        return <CheckCircle className="w-5 h-5 text-green-500" />;
+        return <CheckCircle className="w-6 h-6 text-green-500" />;
       case 'warning':
-        return <AlertTriangle className="w-5 h-5 text-yellow-500" />;
+        return <AlertTriangle className="w-6 h-6 text-yellow-500" />;
       case 'info':
-        return <Info className="w-5 h-5 text-blue-500" />;
+        return <Info className="w-6 h-6 text-blue-500" />;
       default:
-        return <Bell className="w-5 h-5 text-gray-500" />;
-    }
-  };
-
-  const getNotificationClass = (type) => {
-    switch (type) {
-      case 'success':
-        return 'border-l-4 border-green-500 bg-green-50';
-      case 'warning':
-        return 'border-l-4 border-yellow-500 bg-yellow-50';
-      case 'info':
-        return 'border-l-4 border-blue-500 bg-blue-50';
-      default:
-        return 'border-l-4 border-gray-500 bg-gray-50';
+        return <Bell className="w-6 h-6 text-gray-500" />;
     }
   };
 
@@ -106,83 +88,90 @@ const AdminNotifications = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white shadow-sm border-b">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center">
-            <button
-              onClick={() => navigate('/admin/dashboard')}
-              className="flex items-center text-blue-600 hover:text-blue-800 mr-4"
-            >
-              <ArrowLeft className="w-5 h-5 mr-1" />
-              Back to Dashboard
-            </button>
-            <h1 className="text-2xl font-bold text-gray-900">Admin Notifications</h1>
-          </div>
-        </div>
-      </div>
-
-      <div className="container mx-auto px-4 py-8">
-        <div className="bg-white rounded-lg shadow-sm border p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold text-gray-900">Recent Notifications</h2>
-            <button
-              onClick={markAllAsRead}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm"
-            >
-              Mark All as Read
-            </button>
-          </div>
-
-          {notifications.length === 0 ? (
-            <div className="text-center py-12">
-              <Bell className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500">No notifications at this time</p>
+    <div className="min-h-screen bg-gray-100 p-4 sm:p-6 lg:p-8">
+      <div className="max-w-4xl mx-auto">
+        <div className="bg-white rounded-xl shadow-2xl">
+          <div className="bg-gradient-to-r from-blue-700 to-blue-500 text-white p-6 rounded-t-xl shadow-lg">
+            <div className="flex items-center space-x-4">
+              <Bell className="w-10 h-10" />
+              <div>
+                <h1 className="text-3xl font-bold">Admin Notifications</h1>
+                <p className="text-blue-100">Manage and view all system notifications</p>
+              </div>
             </div>
-          ) : (
-            <div className="space-y-4">
-              {notifications.map((notification) => (
-                <div
-                  key={notification.id}
-                  className={`p-4 rounded-lg ${getNotificationClass(notification.type)} ${
-                    !notification.read ? 'bg-opacity-50' : ''
-                  }`}
-                >
-                  <div className="flex items-start">
-                    <div className="flex-shrink-0 mt-1">
-                      {getNotificationIcon(notification.type)}
-                    </div>
-                    <div className="ml-3 flex-1">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-sm font-medium text-gray-900">{notification.title}</h3>
-                        <span className="text-xs text-gray-500">
-                          {new Date(notification.timestamp).toLocaleDateString()}
-                        </span>
+          </div>
+
+          <div className="p-6">
+            <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-200">
+              <h2 className="text-2xl font-bold text-gray-800">Recent Notifications</h2>
+              <button
+                onClick={markAllAsRead}
+                className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold shadow-md"
+              >
+                <MailOpen className="w-5 h-5 mr-2" />
+                Mark All as Read
+              </button>
+            </div>
+
+            {notifications.length === 0 ? (
+              <div className="text-center py-16">
+                <Bell className="w-20 h-20 text-gray-300 mx-auto mb-6" />
+                <h3 className="text-2xl font-bold text-gray-700">No New Notifications</h3>
+                <p className="text-gray-500 mt-2">You're all caught up!</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {notifications.map((notification) => (
+                  <div
+                    key={notification.id}
+                    className={`p-5 rounded-xl border-2 transition-all duration-300 ${notification.read ? 'bg-gray-50 border-gray-200' : 'bg-white border-blue-400 shadow-lg'}`}
+                  >
+                    <div className="flex items-start space-x-4">
+                      <div className="flex-shrink-0 mt-1">
+                        {getNotificationIcon(notification.type)}
                       </div>
-                      <p className="mt-1 text-sm text-gray-600">{notification.message}</p>
-                      <div className="mt-2 flex items-center">
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <h3 className={`text-lg font-bold ${notification.read ? 'text-gray-700' : 'text-gray-900'}`}>{notification.title}</h3>
+                          <span className="text-sm text-gray-500">
+                            {new Date(notification.timestamp).toLocaleDateString()}
+                          </span>
+                        </div>
+                        <p className={`mt-1 text-gray-600 ${notification.read ? '' : 'font-semibold'}`}>{notification.message}</p>
                         {!notification.read && (
-                          <button
-                            onClick={() => markAsRead(notification.id)}
-                            className="text-xs text-blue-600 hover:text-blue-800"
-                          >
-                            Mark as read
-                          </button>
+                          <div className="mt-3">
+                            <button
+                              onClick={() => markAsRead(notification.id)}
+                              className="flex items-center text-sm text-blue-600 hover:text-blue-800 font-semibold"
+                            >
+                              <Mail className="w-4 h-4 mr-2" />
+                              Mark as read
+                            </button>
+                          </div>
                         )}
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="text-center mt-6">
+            <button
+              onClick={() => navigate('/admin/dashboard')}
+              className="flex items-center text-gray-600 hover:text-gray-800 mx-auto font-semibold"
+            >
+              <ArrowLeft className="w-5 h-5 mr-2" />
+              Return to Dashboard
+            </button>
         </div>
       </div>
     </div>
