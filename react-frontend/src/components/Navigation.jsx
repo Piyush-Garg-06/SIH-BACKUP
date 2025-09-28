@@ -29,13 +29,12 @@ const Navigation = ({ isSidebarOpen, setSidebarOpen }) => {
 
     switch (user.userType) {
       case 'worker':
-      case 'patient':
         return [
           { path: '/dashboard', label: 'Dashboard', icon: Home },
           { path: '/healthcard', label: 'My Health Card', icon: CreditCard },
           { path: '/health-records', label: 'Medical Records', icon: FileText },
           { path: '/appointments', label: 'Appointments', icon: Calendar },
-          { path: '/worker-notifications', label: 'Notifications', icon: Bell },
+          { path: '/notifications', label: 'Notifications', icon: Bell },
         ];
       case 'doctor':
         return [
@@ -43,7 +42,7 @@ const Navigation = ({ isSidebarOpen, setSidebarOpen }) => {
           { path: '/patients', label: 'My Patients', icon: Users },
           { path: '/health-checkups', label: 'Health Checkups', icon: Stethoscope },
           { path: '/reports', label: 'Medical Reports', icon: FileText },
-          { path: '/doctor-notifications', label: 'Notifications', icon: Bell },
+          { path: '/notifications', label: 'Notifications', icon: Bell },
         ];
       case 'employer':
         return [
@@ -58,7 +57,7 @@ const Navigation = ({ isSidebarOpen, setSidebarOpen }) => {
           { path: '/admin/dashboard', label: 'Dashboard', icon: Home },
           { path: '/add-new-patient', label: 'Add New Patient', icon: UserPlus },
           { path: '/admin/send-data', label: 'Send Data', icon: Upload },
-          { path: '/admin-notifications', label: 'Notifications', icon: Bell },
+          { path: '/admin/notifications', label: 'Notifications', icon: Bell },
         ];
       case 'emitra':
         return [
@@ -78,32 +77,32 @@ const Navigation = ({ isSidebarOpen, setSidebarOpen }) => {
   return (
     <>
       {/* Desktop Navigation */}
-      <nav style={{ backgroundColor: '#00d5b1' }} className="text-white hidden md:block shadow-md">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-nowrap justify-between items-center py-3">
-            {/* Left: Logo and Portal Name */}
-            <div className="flex items-center flex-shrink-0">
-              <Link to="/" className="text-xl font-bold whitespace-nowrap">
+      <nav style={{ backgroundColor: '#00d5b1' }} className="text-white hidden md:block">
+        <div className="mx-auto px-4">
+          <div className="flex justify-between items-center">
+            {/* Left: Logo */}
+            <div className="flex-1 flex justify-start">
+              <Link to="/" className="text-xl font-bold">
                 Kerala Health Portal
               </Link>
             </div>
 
-            {/* Center: Navigation Links - Ensured to be in one line */}
-            <div className="flex-grow mx-4 overflow-hidden">
-              <ul className="flex flex-nowrap justify-center space-x-1">
+            {/* Center: Navigation Links */}
+            <div className="flex-1 flex justify-center pl-20">
+              <ul className="flex space-x-8">
                 {navItems.map((item) => {
                   const Icon = item.icon;
                   const isActive = location.pathname === item.path;
                   return (
-                    <li key={item.path} className="flex-shrink-0">
+                    <li key={item.path}>
                       <Link
                         to={item.path}
-                        className={`hover:bg-teal-700 px-3 py-2 rounded font-medium flex items-center transition-colors text-sm whitespace-nowrap ${
+                        className={`hover:bg-teal-700 px-3 py-2 rounded-md font-medium flex items-center transition-colors whitespace-nowrap ${
                           isActive ? 'bg-teal-700' : ''
-                        }`}
+                        } ml-8`}
                       >
                         <Icon className="mr-1 w-4 h-4" />
-                        <span>{item.label}</span>
+                        {item.label}
                       </Link>
                     </li>
                   );
@@ -112,22 +111,22 @@ const Navigation = ({ isSidebarOpen, setSidebarOpen }) => {
             </div>
 
             {/* Right: User Info & Logout */}
-            <div className="flex items-center space-x-3 flex-shrink-0">
+            <div className="flex justify-end items-center space-x-4">
               {user && (
                 <>
                   <div className="flex items-center space-x-2">
                     <User className="w-4 h-4" />
-                    <span className="text-sm font-medium hidden lg:block">{user.name}</span>
+                    <span className="text-sm whitespace-nowrap">{user.name}</span>
                     <span className="bg-teal-600 px-2 py-1 rounded text-xs capitalize whitespace-nowrap">
                       {user.userType}
                     </span>
                   </div>
                   <button
                     onClick={handleLogout}
-                    className="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded font-medium flex items-center transition-colors text-sm"
+                    className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-md font-medium flex items-center transition-colors"
                   >
                     <LogOut className="mr-1 w-4 h-4" />
-                    <span className="hidden lg:inline">Logout</span>
+                    Logout
                   </button>
                 </>
               )}
