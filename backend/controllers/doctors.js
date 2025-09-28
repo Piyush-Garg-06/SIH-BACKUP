@@ -66,60 +66,96 @@ export const getMyPatients = async (req, res) => {
     // Get query parameters for filtering
     const { severity, disease } = req.query;
 
-    // Get both workers and patients as potential patients for the doctor
-    let workerQuery = {};
-    let patientQuery = {};
+    // Base queries - find patients and workers directly assigned to this doctor
+    let workerQuery = { doctors: doctor._id };
+    let patientQuery = { doctors: doctor._id };
 
     // Apply severity filter if provided
     if (severity && severity !== 'all') {
+      // Map frontend severity options to backend values
+      let severityValue = severity;
+      if (severity === 'low') {
+        severityValue = 'normal';
+      }
+      
       // Get worker IDs with health records matching severity
       const workerRecords = await HealthRecord.find({ 
         worker: { $exists: true },
-        severity: severity
+        severity: severityValue
       }).distinct('worker');
 
       // Get patient IDs with health records matching severity
       const patientRecords = await HealthRecord.find({ 
         patient: { $exists: true },
-        severity: severity
+        severity: severityValue
       }).distinct('patient');
 
-      workerQuery = { _id: { $in: workerRecords } };
-      patientQuery = { _id: { $in: patientRecords } };
+      // Intersect with doctor's patients/workers
+      workerQuery._id = { $in: workerRecords };
+      // workerQuery.doctors is already set to doctor._id above
+      
+      patientQuery._id = { $in: patientRecords };
+      // patientQuery.doctors is already set to doctor._id above
     }
 
     // Apply disease filter if provided
     if (disease && disease !== 'all') {
+      // Map frontend disease options to backend search terms
+      let diseaseSearchTerm = disease;
+      switch (disease) {
+        case 'infectious':
+          diseaseSearchTerm = 'infectious|tuberculosis|malaria|pneumonia';
+          break;
+        case 'non infectious':
+          diseaseSearchTerm = 'non infectious|skin rash|allergies|fatigue|back pain';
+          break;
+        case 'communicable':
+          diseaseSearchTerm = 'communicable|cardiac arrest';
+          break;
+        case 'non communicable':
+          diseaseSearchTerm = 'non communicable|diabetes|hypertension|asthma';
+          break;
+        default:
+          diseaseSearchTerm = disease;
+      }
+      
       // Get worker IDs with health records containing the disease in diagnosis
       const workerRecords = await HealthRecord.find({ 
         worker: { $exists: true },
-        diagnosis: { $regex: disease, $options: 'i' }
+        diagnosis: { $regex: diseaseSearchTerm, $options: 'i' }
       }).distinct('worker');
 
       // Get patient IDs with health records containing the disease in diagnosis
       const patientRecords = await HealthRecord.find({ 
         patient: { $exists: true },
-        diagnosis: { $regex: disease, $options: 'i' }
+        diagnosis: { $regex: diseaseSearchTerm, $options: 'i' }
       }).distinct('patient');
 
-      // If we already have a worker query from severity filter, intersect the results
+      // Intersect with doctor's patients/workers and any existing severity filter
       if (workerQuery._id && workerQuery._id.$in) {
+        // Already filtered by severity, intersect with disease filter
         workerQuery._id.$in = workerQuery._id.$in.filter(id => workerRecords.includes(id.toString()));
       } else {
-        workerQuery = { _id: { $in: workerRecords } };
+        // Only filtered by disease
+        workerQuery._id = { $in: workerRecords };
+        // Make sure doctor filter is still applied
+        workerQuery.doctors = doctor._id;
       }
-
-      // If we already have a patient query from severity filter, intersect the results
+      
       if (patientQuery._id && patientQuery._id.$in) {
+        // Already filtered by severity, intersect with disease filter
         patientQuery._id.$in = patientQuery._id.$in.filter(id => patientRecords.includes(id.toString()));
       } else {
-        patientQuery = { _id: { $in: patientRecords } };
+        // Only filtered by disease
+        patientQuery._id = { $in: patientRecords };
+        // Make sure doctor filter is still applied
+        patientQuery.doctors = doctor._id;
       }
     }
 
     // Get workers and patients based on queries
-    const workers = await Worker.find(workerQuery).select('_id firstName lastName email mobile bloodGroup dob');
-    const patients = await Patient.find(patientQuery).select('_id firstName lastName email mobile bloodGroup dob');
+    const workers = await Worker.find(workerQuery).select('_id firstName lastName email mobile bloodGroup dob doctors');
+    const patients = await Patient.find(patientQuery).select('_id firstName lastName email mobile bloodGroup dob doctors');
     
     // Helper function to calculate age from date of birth
     const calculateAge = (dob) => {
@@ -149,6 +185,29 @@ export const getMyPatients = async (req, res) => {
         age: calculateAge(patient.dob)
       }))
     ];
+
+    // Add severity information to each patient
+    for (const patient of allPatients) {
+      const healthRecord = await HealthRecord.findOne({ 
+        $or: [
+          { worker: patient._id },
+          { patient: patient._id }
+        ]
+      }).sort({ date: -1 });
+
+      if (healthRecord) {
+        // Map backend severity values to frontend values
+        if (healthRecord.severity === 'normal') {
+          patient.severity = 'low';
+        } else if (healthRecord.severity === 'critical') {
+          patient.severity = 'high';
+        } else {
+          patient.severity = healthRecord.severity;
+        }
+      } else {
+        patient.severity = 'low';
+      }
+    }
 
     res.json(allPatients);
   } catch (err) {

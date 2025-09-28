@@ -24,6 +24,11 @@ const PatientSchema = new mongoose.Schema({
   chronicConditions: [{ type: String }],
   vaccinations: [{ type: String }],
   healthId: { type: String, unique: true, sparse: true },
+  // Add relationship to doctors
+  doctors: [{ 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'Doctor' 
+  }]
 });
 
 export default mongoose.model('Patient', PatientSchema);

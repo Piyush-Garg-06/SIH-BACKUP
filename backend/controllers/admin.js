@@ -381,62 +381,108 @@ export const getAllPatients = async (req, res) => {
     }
 
     // Get query parameters for filtering
-    const { severity, disease } = req.query;
+    const { severity, disease, doctorId } = req.query;
 
     // Base queries
     let workerQuery = {};
     let patientQuery = {};
 
+    // If a specific doctor is requested, filter by that doctor
+    if (doctorId && doctorId !== 'all') {
+      workerQuery.doctors = doctorId;
+      patientQuery.doctors = doctorId;
+    }
+
     // Apply severity filter if provided
     if (severity && severity !== 'all') {
+      // Map frontend severity options to backend values
+      let severityValue = severity;
+      if (severity === 'low') {
+        severityValue = 'normal';
+      }
+      
       // Get worker IDs with health records matching severity
       const workerRecords = await HealthRecord.find({ 
         worker: { $exists: true },
-        severity: severity
+        severity: severityValue
       }).distinct('worker');
 
       // Get patient IDs with health records matching severity
       const patientRecords = await HealthRecord.find({ 
         patient: { $exists: true },
-        severity: severity
+        severity: severityValue
       }).distinct('patient');
 
-      workerQuery = { _id: { $in: workerRecords } };
-      patientQuery = { _id: { $in: patientRecords } };
+      // Apply to queries
+      if (Object.keys(workerQuery).length > 0) {
+        workerQuery._id = { $in: workerRecords };
+      } else {
+        workerQuery = { _id: { $in: workerRecords } };
+      }
+      
+      if (Object.keys(patientQuery).length > 0) {
+        patientQuery._id = { $in: patientRecords };
+      } else {
+        patientQuery = { _id: { $in: patientRecords } };
+      }
     }
 
     // Apply disease filter if provided
     if (disease && disease !== 'all') {
+      // Map frontend disease options to backend search terms
+      let diseaseSearchTerm = disease;
+      switch (disease) {
+        case 'infectious':
+          diseaseSearchTerm = 'infectious|tuberculosis|malaria|pneumonia';
+          break;
+        case 'non infectious':
+          diseaseSearchTerm = 'non infectious|skin rash|allergies|fatigue|back pain';
+          break;
+        case 'communicable':
+          diseaseSearchTerm = 'communicable|cardiac arrest';
+          break;
+        case 'non communicable':
+          diseaseSearchTerm = 'non communicable|diabetes|hypertension|asthma';
+          break;
+        default:
+          diseaseSearchTerm = disease;
+      }
+      
       // Get worker IDs with health records containing the disease in diagnosis
       const workerRecords = await HealthRecord.find({ 
         worker: { $exists: true },
-        diagnosis: { $regex: disease, $options: 'i' }
+        diagnosis: { $regex: diseaseSearchTerm, $options: 'i' }
       }).distinct('worker');
 
       // Get patient IDs with health records containing the disease in diagnosis
       const patientRecords = await HealthRecord.find({ 
         patient: { $exists: true },
-        diagnosis: { $regex: disease, $options: 'i' }
+        diagnosis: { $regex: diseaseSearchTerm, $options: 'i' }
       }).distinct('patient');
 
-      // If we already have a worker query from severity filter, intersect the results
+      // Apply to queries
       if (workerQuery._id && workerQuery._id.$in) {
+        // Already filtered, intersect with disease filter
         workerQuery._id.$in = workerQuery._id.$in.filter(id => workerRecords.includes(id.toString()));
+      } else if (Object.keys(workerQuery).length > 0) {
+        workerQuery._id = { $in: workerRecords };
       } else {
         workerQuery = { _id: { $in: workerRecords } };
       }
-
-      // If we already have a patient query from severity filter, intersect the results
+      
       if (patientQuery._id && patientQuery._id.$in) {
+        // Already filtered, intersect with disease filter
         patientQuery._id.$in = patientQuery._id.$in.filter(id => patientRecords.includes(id.toString()));
+      } else if (Object.keys(patientQuery).length > 0) {
+        patientQuery._id = { $in: patientRecords };
       } else {
         patientQuery = { _id: { $in: patientRecords } };
       }
     }
 
     // Get workers and patients based on queries
-    const workers = await Worker.find(workerQuery).select('_id firstName lastName email mobile bloodGroup employerName workLocation dob');
-    const patients = await Patient.find(patientQuery).select('_id firstName lastName email mobile bloodGroup dob');
+    const workers = await Worker.find(workerQuery).select('_id firstName lastName email mobile bloodGroup employerName workLocation dob doctors');
+    const patients = await Patient.find(patientQuery).select('_id firstName lastName email mobile bloodGroup dob doctors');
     
     // Helper function to calculate age from date of birth
     const calculateAge = (dob) => {
@@ -466,6 +512,29 @@ export const getAllPatients = async (req, res) => {
         age: calculateAge(patient.dob)
       }))
     ];
+
+    // Add severity information to each patient
+    for (const patient of allPatients) {
+      const healthRecord = await HealthRecord.findOne({ 
+        $or: [
+          { worker: patient._id },
+          { patient: patient._id }
+        ]
+      }).sort({ date: -1 });
+
+      if (healthRecord) {
+        // Map backend severity values to frontend values
+        if (healthRecord.severity === 'normal') {
+          patient.severity = 'low';
+        } else if (healthRecord.severity === 'critical') {
+          patient.severity = 'high';
+        } else {
+          patient.severity = healthRecord.severity;
+        }
+      } else {
+        patient.severity = 'low';
+      }
+    }
 
     res.json(allPatients);
   } catch (err) {
@@ -552,6 +621,110 @@ export const sendDataToGovernment = async (req, res) => {
       msg: message, 
       totalCount: totalCount
     });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server error');
+  }
+};
+
+// New function to assign a patient/worker to a doctor
+export const assignPatientToDoctor = async (req, res) => {
+  try {
+    // Check if user is admin
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ msg: 'Access denied. Admins only.' });
+    }
+
+    const { patientId, doctorId } = req.body;
+
+    // Validate input
+    if (!patientId || !doctorId) {
+      return res.status(400).json({ msg: 'Patient ID and Doctor ID are required' });
+    }
+
+    // Check if doctor exists
+    const doctor = await Doctor.findById(doctorId);
+    if (!doctor) {
+      return res.status(404).json({ msg: 'Doctor not found' });
+    }
+
+    // Check if patient is a worker or regular patient
+    let patient = await Worker.findById(patientId);
+    let isWorker = true;
+    
+    if (!patient) {
+      patient = await Patient.findById(patientId);
+      isWorker = false;
+    }
+    
+    if (!patient) {
+      return res.status(404).json({ msg: 'Patient not found' });
+    }
+    
+    // Add doctor to patient's doctors array if not already there
+    if (!patient.doctors.includes(doctorId)) {
+      patient.doctors.push(doctorId);
+      await patient.save();
+    }
+    
+    res.json({ msg: 'Patient assigned to doctor successfully' });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server error');
+  }
+};
+
+// New function to unassign a patient/worker from a doctor
+export const unassignPatientFromDoctor = async (req, res) => {
+  try {
+    // Check if user is admin
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ msg: 'Access denied. Admins only.' });
+    }
+
+    const { patientId, doctorId } = req.body;
+
+    // Validate input
+    if (!patientId || !doctorId) {
+      return res.status(400).json({ msg: 'Patient ID and Doctor ID are required' });
+    }
+
+    // Check if patient is a worker or regular patient
+    let patient = await Worker.findById(patientId);
+    let isWorker = true;
+    
+    if (!patient) {
+      patient = await Patient.findById(patientId);
+      isWorker = false;
+    }
+    
+    if (!patient) {
+      return res.status(404).json({ msg: 'Patient not found' });
+    }
+    
+    // Remove doctor from patient's doctors array
+    patient.doctors = patient.doctors.filter(
+      docId => docId.toString() !== doctorId.toString()
+    );
+    await patient.save();
+    
+    res.json({ msg: 'Patient unassigned from doctor successfully' });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server error');
+  }
+};
+
+// New function to get all doctors for admin UI
+export const getAllDoctors = async (req, res) => {
+  try {
+    // Check if user is admin
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ msg: 'Access denied. Admins only.' });
+    }
+
+    const doctors = await Doctor.find().select('_id firstName lastName specialization');
+    res.json(doctors);
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server error');

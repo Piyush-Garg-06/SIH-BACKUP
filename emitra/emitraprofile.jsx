@@ -1,4 +1,4 @@
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../react-frontend/src/contexts/useAuth';
 import { motion } from 'framer-motion';
 import { User, Mail, MapPin, Edit } from 'lucide-react';
 

@@ -48,6 +48,10 @@ import DoctorAppointments from './pages/DoctorAppointments';
 import DoctorNotifications from './pages/DoctorNotifications';
 import ViewAppointment from './pages/ViewAppointment';
 
+// Import new notification components
+import WorkerNotifications from './pages/WorkerNotifications';
+import NewAdminNotifications from './pages/AdminNotifications';
+
 function App() {
   return (
     <AuthProvider>
@@ -84,14 +88,14 @@ function App() {
                 <Route path="/admin/patients" element={<AdminPatients />} />
                 <Route path="/add-new-patient" element={<AddNewUser />} />
                 <Route path="/admin/send-data" element={<SendData />} />
-                <Route path="/admin/notifications" element={<AdminNotifications />} />
+                <Route path="/admin-notifications" element={<NewAdminNotifications />} />
                 <Route path="/healthcard" element={<HealthCard />} />
                 <Route path="/health-records" element={<HealthRecords />} />
                 <Route path="/appointments" element={<Appointments />} />
                 <Route path="/schedule-appointment" element={<ScheduleAppointment />} />
                 <Route path="/submit-health-record" element={<SubmitHealthRecord />} />
                 <Route path="/employer-worker-health" element={<EmployerWorkerHealth />} />
-                <Route path="/notifications" element={<Notifications />} />
+                <Route path="/worker-notifications" element={<WorkerNotifications />} />
                 <Route path="/patients" element={<Patients />} />
                 <Route path="/patients/:patientId" element={<ReportDetail />} />
                 <Route path="/health-checkups" element={<HealthCheckups />} />
@@ -104,7 +108,7 @@ function App() {
                 
                 {/* Doctor specific routes */}
                 <Route path="/doctor/appointments" element={<DoctorAppointments />} />
-                <Route path="/doctor/notifications" element={<DoctorNotifications />} />
+                <Route path="/doctor-notifications" element={<DoctorNotifications />} />
                 <Route path="/doctor/appointments/:appointmentId" element={<ViewAppointment />} />
               </Route>
             </Routes>

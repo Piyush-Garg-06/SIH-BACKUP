@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   Users, Search, Filter, User, MapPin, Calendar,
   AlertTriangle, CheckCircle, Clock, Phone, Mail,
-  Stethoscope, FileText, Eye, Edit, Plus
+  Stethoscope, FileText, Eye, Edit, Plus, UserPlus, UserMinus
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import api from '../utils/api';
@@ -14,15 +14,27 @@ const AdminPatients = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [severityFilter, setSeverityFilter] = useState('all');
   const [diseaseFilter, setDiseaseFilter] = useState('all');
+  const [doctorFilter, setDoctorFilter] = useState('all');
   const [patients, setPatients] = useState([]);
+  const [doctors, setDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [assigning, setAssigning] = useState({});
 
   useEffect(() => {
     if (!user || user.role !== 'admin') {
       navigate('/login');
       return;
     }
+
+    const fetchDoctors = async () => {
+      try {
+        const response = await api.get('/admin/doctors');
+        setDoctors(response.data || []);
+      } catch (err) {
+        console.error('Failed to fetch doctors', err);
+      }
+    };
 
     const fetchPatients = async () => {
       try {
@@ -31,6 +43,7 @@ const AdminPatients = () => {
         const params = new URLSearchParams();
         if (severityFilter && severityFilter !== 'all') params.append('severity', severityFilter);
         if (diseaseFilter && diseaseFilter !== 'all') params.append('disease', diseaseFilter);
+        if (doctorFilter && doctorFilter !== 'all') params.append('doctorId', doctorFilter);
         
         const response = await api.get(`/admin/patients?${params.toString()}`);
         if (Array.isArray(response)) {
@@ -47,16 +60,15 @@ const AdminPatients = () => {
       }
     };
 
+    fetchDoctors();
     fetchPatients();
-  }, [user, navigate, severityFilter, diseaseFilter]);
+  }, [user, navigate, severityFilter, diseaseFilter, doctorFilter]);
 
   const getSeverityColor = (severity) => {
     switch (severity) {
-      case 'critical': return 'bg-red-100 text-red-800 border-red-200';
-      case 'high': return 'bg-orange-100 text-orange-800 border-orange-200';
-      case 'moderate': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'normal': return 'bg-green-100 text-green-800 border-green-200';
-      case 'low': return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'high': return 'bg-red-100 text-red-800 border-red-200';
+      case 'moderate': return 'bg-orange-100 text-orange-800 border-orange-200';
+      case 'low': return 'bg-green-100 text-green-800 border-green-200';
       default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
@@ -103,6 +115,54 @@ const AdminPatients = () => {
       </div>
     );
   }
+
+  const handleAssignDoctor = async (patientId, doctorId) => {
+    if (!doctorId) return;
+    
+    setAssigning(prev => ({ ...prev, [patientId]: true }));
+    
+    try {
+      await api.post('/admin/assign-patient', { patientId, doctorId });
+      
+      // Update the patient in the state
+      setPatients(prevPatients => 
+        prevPatients.map(patient => 
+          patient._id === patientId 
+            ? { ...patient, doctors: [...(patient.doctors || []), doctorId] }
+            : patient
+        )
+      );
+    } catch (err) {
+      console.error('Failed to assign doctor', err);
+      alert('Failed to assign doctor. Please try again.');
+    } finally {
+      setAssigning(prev => ({ ...prev, [patientId]: false }));
+    }
+  };
+
+  const handleUnassignDoctor = async (patientId, doctorId) => {
+    if (!doctorId) return;
+    
+    setAssigning(prev => ({ ...prev, [patientId]: true }));
+    
+    try {
+      await api.post('/admin/unassign-patient', { patientId, doctorId });
+      
+      // Update the patient in the state
+      setPatients(prevPatients => 
+        prevPatients.map(patient => 
+          patient._id === patientId 
+            ? { ...patient, doctors: (patient.doctors || []).filter(id => id !== doctorId) }
+            : patient
+        )
+      );
+    } catch (err) {
+      console.error('Failed to unassign doctor', err);
+      alert('Failed to unassign doctor. Please try again.');
+    } finally {
+      setAssigning(prev => ({ ...prev, [patientId]: false }));
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -168,6 +228,22 @@ const AdminPatients = () => {
             </div>
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
+                <span className="text-sm text-gray-600">Doctor:</span>
+                <select
+                  value={doctorFilter}
+                  onChange={(e) => setDoctorFilter(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="all">All Doctors</option>
+                  {doctors.map(doctor => (
+                    <option key={doctor._id} value={doctor._id}>
+                      Dr. {doctor.firstName} {doctor.lastName} ({doctor.specialization})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex items-center space-x-2">
                 <span className="text-sm text-gray-600">Severity:</span>
                 <select
                   value={severityFilter}
@@ -175,10 +251,9 @@ const AdminPatients = () => {
                   className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="all">All Levels</option>
-                  <option value="critical">Critical</option>
-                  <option value="high">High</option>
+                  <option value="low">Low</option>
                   <option value="moderate">Moderate</option>
-                  <option value="normal">Normal</option>
+                  <option value="high">High</option>
                 </select>
               </div>
 
@@ -190,13 +265,10 @@ const AdminPatients = () => {
                   className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="all">All Diseases</option>
-                  <option value="diabetes">Diabetes</option>
-                  <option value="hypertension">Hypertension</option>
-                  <option value="asthma">Asthma</option>
-                  <option value="cardiac">Cardiac Issues</option>
-                  <option value="respiratory">Respiratory</option>
-                  <option value="skin">Skin Conditions</option>
-                  <option value="injury">Injuries</option>
+                  <option value="infectious">Infectious</option>
+                  <option value="non infectious">Non Infectious</option>
+                  <option value="communicable">Communicable</option>
+                  <option value="non communicable">Non Communicable</option>
                 </select>
               </div>
             </div>
@@ -244,6 +316,64 @@ const AdminPatients = () => {
                       </>
                     )}
                   </div>
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1"><strong>Assigned Doctors:</strong></p>
+                    {patient.doctors && patient.doctors.length > 0 ? (
+                      <div className="flex flex-wrap gap-1">
+                        {patient.doctors.map((doctorId, index) => {
+                          const doctor = doctors.find(d => d._id === doctorId);
+                          return doctor ? (
+                            <span key={index} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                              Dr. {doctor.firstName} {doctor.lastName}
+                            </span>
+                          ) : null;
+                        })}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-600">No doctors assigned</p>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="flex justify-end space-x-2">
+                  <select
+                    onChange={(e) => handleAssignDoctor(patient._id, e.target.value)}
+                    className="px-3 py-1 border border-gray-300 rounded-md text-sm"
+                    disabled={assigning[patient._id]}
+                  >
+                    <option value="">Assign Doctor</option>
+                    {doctors.map(doctor => (
+                      <option 
+                        key={doctor._id} 
+                        value={doctor._id}
+                        disabled={patient.doctors && patient.doctors.includes(doctor._id)}
+                      >
+                        Dr. {doctor.firstName} {doctor.lastName}
+                      </option>
+                    ))}
+                  </select>
+                  {patient.doctors && patient.doctors.length > 0 && (
+                    <select
+                      onChange={(e) => handleUnassignDoctor(patient._id, e.target.value)}
+                      className="px-3 py-1 border border-gray-300 rounded-md text-sm"
+                      disabled={assigning[patient._id]}
+                    >
+                      <option value="">Unassign Doctor</option>
+                      {patient.doctors.map((doctorId, index) => {
+                        const doctor = doctors.find(d => d._id === doctorId);
+                        return doctor ? (
+                          <option key={index} value={doctor._id}>
+                            Dr. {doctor.firstName} {doctor.lastName}
+                          </option>
+                        ) : null;
+                      })}
+                    </select>
+                  )}
+                  {assigning[patient._id] && (
+                    <div className="flex items-center">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

@@ -93,7 +93,6 @@ const Login = () => {
   const getUserIcon = () => {
     switch (formData.userType) {
       case 'doctor': return <Stethoscope className="w-5 h-5" />;
-      case 'employer': return <Building2 className="w-5 h-5" />;
       case 'admin': return <UserCheck className="w-5 h-5" />;
       case 'emitra': return <Building className="w-5 h-5" />;
       default: return <Users className="w-5 h-5" />;
@@ -216,7 +215,6 @@ const Login = () => {
                       >
                         <option value="worker">Migrant Worker</option>
                         <option value="doctor">Doctor/Healthcare Provider</option>
-                        <option value="employer">Employer/Manager</option>
                         <option value="admin">Administrator</option>
                         <option value="emitra">eMitra Operator</option>
                       </select>
