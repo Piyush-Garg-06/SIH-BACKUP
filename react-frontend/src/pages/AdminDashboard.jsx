@@ -136,20 +136,20 @@ const AdminDashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
+      <div className="bg-gradient-to-r from-blue-800 to-blue-600 text-white shadow-lg">
         <div className="container mx-auto px-4 py-6">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-3xl font-bold text-blue-900">{dashboardData.title}</h1>
-              <p className="text-gray-600 mt-1">{dashboardData.subtitle}</p>
+              <h1 className="text-3xl font-bold text-white-900">{dashboardData.title}</h1>
+              <p className="text-white-600 mt-1">{dashboardData.subtitle}</p>
               <div className="flex items-center mt-2">
-                <span className="text-sm text-gray-500">Welcome,</span>
-                <span className="text-lg font-semibold text-blue-800 ml-1">{user.name || 'Admin'}</span>
+                <span className="text-sm text-white-500">Welcome,</span>
+                <span className="text-lg font-semibold text-white-800 ml-1">{user.name || 'Admin'}</span>
                 <span className="ml-3 px-3 py-1 rounded-full text-xs font-semibold capitalize bg-red-100 text-red-800">
                   {user.userType}
                 </span>
                 {hospitalName && (
-                  <span className="ml-3 px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 flex items-center">
+                  <span className="ml-3 px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-white-800 flex items-center">
                     <Building className="w-3 h-3 mr-1" />
                     {hospitalName}
                   </span>
@@ -187,7 +187,7 @@ const AdminDashboard = () => {
             };
 
             return (
-              <div key={index} className="bg-white p-6 rounded-lg shadow-sm border">
+              <div key={index} className="bg-white p-6 rounded-lg shadow-lg border border-gray-200 transform hover:-translate-y-1 transition-all duration-300">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-gray-600">{stat.label}</p>
@@ -202,99 +202,110 @@ const AdminDashboard = () => {
           })}
         </div>
 
-        {/* Admin Actions */}
-        <div className="bg-white p-6 rounded-lg shadow-sm border mb-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Admin Actions</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Link 
-              to="/add-new-patient"
-              className="bg-blue-600 text-white px-4 py-3 rounded-md font-medium hover:bg-blue-700 transition-colors flex items-center justify-center"
-            >
-              <UserPlus className="w-5 h-5 mr-2" />
-              Add New User
-            </Link>
-            <Link 
-              to="/admin/send-data"
-              className="bg-green-600 text-white px-4 py-3 rounded-md font-medium hover:bg-green-700 transition-colors flex items-center justify-center"
-            >
-              <Upload className="w-5 h-5 mr-2" />
-              Send Data to Government
-            </Link>
-            <div className="flex items-center">
-              <input
-                type="text"
-                placeholder="Enter hospital/organization name"
-                value={hospitalName}
-                onChange={(e) => setHospitalName(e.target.value)}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <button 
-                onClick={() => alert(`Hospital name set to: ${hospitalName}`)}
-                className="bg-gray-600 text-white px-3 py-2 rounded-r-md font-medium hover:bg-gray-700 transition-colors"
-              >
-                Set
-              </button>
+        <div className="grid lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-8">
+            {/* Admin Actions */}
+            <div className="bg-white p-6 rounded-lg shadow-lg border border-gray-200 transform hover:-translate-y-1 transition-all duration-300">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">Admin Actions</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Link 
+                  to="/add-new-patient"
+                  className="bg-blue-600 text-white px-4 py-3 rounded-md font-medium hover:bg-blue-700 transition-colors flex items-center justify-center"
+                >
+                  <UserPlus className="w-5 h-5 mr-2" />
+                  Add New User
+                </Link>
+                <Link 
+                  to="/admin/send-data"
+                  className="bg-green-600 text-white px-4 py-3 rounded-md font-medium hover:bg-green-700 transition-colors flex items-center justify-center"
+                >
+                  <Upload className="w-5 h-5 mr-2" />
+                  Send Data to Government
+                </Link>
+                <div className="flex items-center">
+                  <input
+                    type="text"
+                    placeholder="Enter hospital/organization name"
+                    value={hospitalName}
+                    onChange={(e) => setHospitalName(e.target.value)}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <button 
+                    onClick={() => alert(`Hospital name set to: ${hospitalName}`)}
+                    className="bg-gray-600 text-white px-3 py-2 rounded-r-md font-medium hover:bg-gray-700 transition-colors"
+                  >
+                    Set
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Actions */}
+            <div className="bg-white p-6 rounded-lg shadow-lg border border-gray-200 transform hover:-translate-y-1 transition-all duration-300">
+              <h2 className="text-xl font-semibold text-gray-900 mb-6">Quick Actions</h2>
+              {dashboardData.cards && dashboardData.cards.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {dashboardData.cards.map((card, index) => {
+                    // Filter out unwanted cards
+                    if (card.title === 'Doctors' || card.title === 'Employers' || card.title === 'Health Monitoring' || card.title === 'All Workers' || card.title === 'System Reports') {
+                      return null;
+                    }
+                    
+                    const Icon = card.icon ? {
+                      Users, Stethoscope, Shield, BarChart3
+                    }[card.icon] : Users;
+                    
+                    const getStatColor = (color) => {
+                      switch (color) {
+                        case 'blue': return 'bg-blue-100 text-blue-600';
+                        case 'green': return 'bg-green-100 text-green-600';
+                        case 'red': return 'bg-red-100 text-red-600';
+                        case 'orange': return 'bg-orange-100 text-orange-600';
+                        case 'purple': return 'bg-purple-100 text-purple-600';
+                        default: return 'bg-gray-100 text-gray-600';
+                      }
+                    };
+
+                    return (
+                      <Link
+                        key={index}
+                        to={card.path}
+                        className="bg-white p-6 rounded-lg shadow-lg border border-gray-200 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 block"
+                      >
+                        <div className={`w-12 h-12 ${getStatColor(card.color)} rounded-lg flex items-center justify-center mb-4`}>
+                          {Icon ? <Icon className="w-6 h-6" /> : <div className="w-6 h-6 bg-gray-200 rounded-full" />}
+                        </div>
+                        <h3 className="text-lg font-semibold text-gray-900 mb-2">{card.title}</h3>
+                        <p className="text-gray-600 text-sm">{card.description}</p>
+                      </Link>
+                    );
+                  })}
+                  {/* Add the new Patient Management card */}
+                  <Link
+                    to="/admin/patients"
+                    className="bg-white p-6 rounded-lg shadow-lg border border-gray-200 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 block"
+                  >
+                    <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center mb-4">
+                      <Users className="w-6 h-6" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Patient Management</h3>
+                    <p className="text-gray-600 text-sm">View and manage all patients and workers</p>
+                  </Link>
+                </div>
+              ) : (
+                <div className="bg-white p-6 rounded-lg shadow-lg border border-gray-200 transform hover:-translate-y-1 transition-all duration-300">
+                  <p className="text-gray-500 text-center">No quick actions available</p>
+                </div>
+              )}
             </div>
           </div>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-6">Quick Actions</h2>
-          {dashboardData.cards && dashboardData.cards.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {dashboardData.cards.map((card, index) => {
-                // Filter out unwanted cards
-                if (card.title === 'Doctors' || card.title === 'Employers' || card.title === 'Health Monitoring' || card.title === 'All Workers' || card.title === 'System Reports') {
-                  return null;
-                }
-                
-                const Icon = card.icon ? {
-                  Users, Stethoscope, Shield, BarChart3
-                }[card.icon] : Users;
-                
-                const getStatColor = (color) => {
-                  switch (color) {
-                    case 'blue': return 'bg-blue-100 text-blue-600';
-                    case 'green': return 'bg-green-100 text-green-600';
-                    case 'red': return 'bg-red-100 text-red-600';
-                    case 'orange': return 'bg-orange-100 text-orange-600';
-                    case 'purple': return 'bg-purple-100 text-purple-600';
-                    default: return 'bg-gray-100 text-gray-600';
-                  }
-                };
-
-                return (
-                  <Link
-                    key={index}
-                    to={card.path}
-                    className="bg-white p-6 rounded-lg shadow-sm border hover:shadow-md transition-shadow block"
-                  >
-                    <div className={`w-12 h-12 ${getStatColor(card.color)} rounded-lg flex items-center justify-center mb-4`}>
-                      {Icon ? <Icon className="w-6 h-6" /> : <div className="w-6 h-6 bg-gray-200 rounded-full" />}
-                    </div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">{card.title}</h3>
-                    <p className="text-gray-600 text-sm">{card.description}</p>
-                  </Link>
-                );
-              })}
-              {/* Add the new Patient Management card */}
-              <Link
-                to="/admin/patients"
-                className="bg-white p-6 rounded-lg shadow-sm border hover:shadow-md transition-shadow block"
-              >
-                <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center mb-4">
-                  <Users className="w-6 h-6" />
-                </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Patient Management</h3>
-                <p className="text-gray-600 text-sm">View and manage all patients and workers</p>
-              </Link>
+          <div className="space-y-8">
+            {/* Placeholder for sidebar content */}
+            <div className="bg-white p-6 rounded-lg shadow-lg border border-gray-200 transform hover:-translate-y-1 transition-all duration-300">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Notifications</h3>
+              <p className="text-gray-500 text-center">No new notifications</p>
             </div>
-          ) : (
-            <div className="bg-white p-6 rounded-lg shadow-sm border">
-              <p className="text-gray-500 text-center">No quick actions available</p>
-            </div>
-          )}
+          </div>
         </div>
       </div>
 

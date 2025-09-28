@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/useAuth';
 import { useNavigate } from 'react-router-dom';
 import api from '../utils/api';
 import { toast } from 'react-hot-toast';
-import { UserPlus, Users, Heart, FileText, Phone, MapPin, Calendar, Briefcase } from 'lucide-react';
+import { UserPlus, Users, Heart, FileText, Phone, MapPin, Calendar, Briefcase, Save, X } from 'lucide-react';
 
 const AddNewPatient = () => {
   const { user } = useAuth();
@@ -42,9 +42,7 @@ const AddNewPatient = () => {
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
-    console.log('AddNewPatient component mounted', { user });
     if (!user || user.role !== 'doctor') {
-      console.log('Access denied - user:', user);
       toast.error('Unauthorized access. Only doctors can add new patients.');
       navigate('/login');
     }
@@ -56,7 +54,6 @@ const AddNewPatient = () => {
       ...prev,
       [name]: value
     }));
-    // Clear error when user starts typing
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,
@@ -67,7 +64,6 @@ const AddNewPatient = () => {
 
   const handlePatientTypeChange = (type) => {
     setPatientType(type);
-    // Clear worker-specific fields when switching to patient
     if (type === 'patient') {
       setFormData(prev => ({
         ...prev,
@@ -81,8 +77,6 @@ const AddNewPatient = () => {
 
   const validateForm = () => {
     const newErrors = {};
-    
-    // Required fields for both types
     if (!formData.firstName.trim()) newErrors.firstName = 'First name is required';
     if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
     if (!formData.email.trim()) newErrors.email = 'Email is required';
@@ -95,14 +89,12 @@ const AddNewPatient = () => {
     if (!formData.district.trim()) newErrors.district = 'District is required';
     if (!formData.pincode.trim()) newErrors.pincode = 'Pincode is required';
     
-    // Worker-specific validations
     if (patientType === 'worker') {
       if (!formData.workLocation.trim()) newErrors.workLocation = 'Work location is required';
       if (!formData.employerName.trim()) newErrors.employerName = 'Employer name is required';
       if (!formData.jobType.trim()) newErrors.jobType = 'Job type is required';
     }
     
-    // Validation patterns
     if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = 'Please enter a valid email address';
     }
@@ -138,8 +130,8 @@ const AddNewPatient = () => {
       const submitData = {
         ...formData,
         patientType: patientType,
-        role: patientType, // Set role based on patient type
-        password: 'TempPass123!' // Temporary password - should be changed on first login
+        role: patientType,
+        password: 'TempPass123!'
       };
 
       const response = await api.post('/doctors/add-patient', submitData);
@@ -147,7 +139,7 @@ const AddNewPatient = () => {
       if (response.data.success) {
         toast.success(`${patientType === 'worker' ? 'Migrant Worker' : 'Patient'} added successfully!`);
         toast.success(`Health ID generated: ${response.data.healthId}`);
-        navigate('/doctors'); // Navigate back to doctor dashboard
+        navigate('/doctors');
       }
     } catch (error) {
       console.error('Error adding patient:', error);
@@ -162,53 +154,51 @@ const AddNewPatient = () => {
   };
 
   if (!user || user.role !== 'doctor') {
-    console.log('Rendering null - user access check failed');
     return null;
   }
 
-  console.log('Rendering AddNewPatient component');
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4">
-        <div className="bg-white rounded-lg shadow-md">
+    <div className="min-h-screen bg-gray-100 p-4 sm:p-6 lg:p-8">
+      <div className="max-w-4xl mx-auto">
+        <div className="bg-white rounded-xl shadow-2xl">
           {/* Header */}
-          <div className="bg-blue-600 text-white p-6 rounded-t-lg">
-            <div className="flex items-center space-x-3">
-              <UserPlus className="w-8 h-8" />
+          <div className="bg-gradient-to-r from-blue-700 to-blue-500 text-white p-6 rounded-t-xl shadow-lg">
+            <div className="flex items-center space-x-4">
+              <UserPlus className="w-10 h-10" />
               <div>
-                <h1 className="text-2xl font-bold">Add New Patient</h1>
+                <h1 className="text-3xl font-bold">Add New Patient</h1>
                 <p className="text-blue-100">Register a new migrant worker or patient</p>
               </div>
             </div>
           </div>
 
           {/* Patient Type Selection */}
-          <div className="p-6 border-b">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Patient Type</h2>
+          <div className="p-6 border-b border-gray-200">
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">Patient Type</h2>
             <div className="flex space-x-4">
               <button
                 type="button"
                 onClick={() => handlePatientTypeChange('worker')}
-                className={`flex items-center px-6 py-3 rounded-lg border-2 transition-colors ${
+                className={`flex items-center px-6 py-3 rounded-lg border-2 transition-all duration-300 transform hover:scale-105 ${
                   patientType === 'worker' 
-                    ? 'border-blue-500 bg-blue-50 text-blue-700' 
-                    : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                    ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-md' 
+                    : 'border-gray-300 bg-white text-gray-700 hover:border-blue-400 hover:bg-blue-50'
                 }`}
               >
-                <Briefcase className="w-5 h-5 mr-2" />
-                Migrant Worker
+                <Briefcase className="w-5 h-5 mr-3" />
+                <span className="font-semibold">Migrant Worker</span>
               </button>
               <button
                 type="button"
                 onClick={() => handlePatientTypeChange('patient')}
-                className={`flex items-center px-6 py-3 rounded-lg border-2 transition-colors ${
+                className={`flex items-center px-6 py-3 rounded-lg border-2 transition-all duration-300 transform hover:scale-105 ${
                   patientType === 'patient' 
-                    ? 'border-green-500 bg-green-50 text-green-700' 
-                    : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                    ? 'border-green-500 bg-green-50 text-green-700 shadow-md' 
+                    : 'border-gray-300 bg-white text-gray-700 hover:border-green-400 hover:bg-green-50'
                 }`}
               >
-                <Heart className="w-5 h-5 mr-2" />
-                Regular Patient
+                <Heart className="w-5 h-5 mr-3" />
+                <span className="font-semibold">Regular Patient</span>
               </button>
             </div>
           </div>
@@ -216,9 +206,9 @@ const AddNewPatient = () => {
           {/* Form */}
           <form onSubmit={handleSubmit} className="p-6">
             {/* Personal Information */}
-            <div className="mb-8">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <Users className="w-5 h-5 mr-2" />
+            <div className="mb-8 border-b border-gray-200 pb-8">
+              <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                <Users className="w-6 h-6 mr-3 text-blue-500" />
                 Personal Information
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -232,7 +222,7 @@ const AddNewPatient = () => {
                     name="firstName"
                     value={formData.firstName}
                     onChange={handleChange}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    className={`w-full px-4 py-2 border rounded-md bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
                       errors.firstName ? 'border-red-500' : 'border-gray-300'
                     }`}
                     placeholder="Enter first name"
@@ -250,7 +240,7 @@ const AddNewPatient = () => {
                     name="lastName"
                     value={formData.lastName}
                     onChange={handleChange}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    className={`w-full px-4 py-2 border rounded-md bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
                       errors.lastName ? 'border-red-500' : 'border-gray-300'
                     }`}
                     placeholder="Enter last name"
@@ -268,7 +258,7 @@ const AddNewPatient = () => {
                     name="email"
                     value={formData.email}
                     onChange={handleChange}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    className={`w-full px-4 py-2 border rounded-md bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
                       errors.email ? 'border-red-500' : 'border-gray-300'
                     }`}
                     placeholder="Enter email address"
@@ -286,7 +276,7 @@ const AddNewPatient = () => {
                     name="mobile"
                     value={formData.mobile}
                     onChange={handleChange}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    className={`w-full px-4 py-2 border rounded-md bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
                       errors.mobile ? 'border-red-500' : 'border-gray-300'
                     }`}
                     placeholder="Enter mobile number"
@@ -303,7 +293,7 @@ const AddNewPatient = () => {
                     name="gender"
                     value={formData.gender}
                     onChange={handleChange}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    className={`w-full px-4 py-2 border rounded-md bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
                       errors.gender ? 'border-red-500' : 'border-gray-300'
                     }`}
                   >
@@ -325,7 +315,7 @@ const AddNewPatient = () => {
                     name="dob"
                     value={formData.dob}
                     onChange={handleChange}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    className={`w-full px-4 py-2 border rounded-md bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
                       errors.dob ? 'border-red-500' : 'border-gray-300'
                     }`}
                   />
@@ -342,7 +332,7 @@ const AddNewPatient = () => {
                     name="aadhaar"
                     value={formData.aadhaar}
                     onChange={handleChange}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    className={`w-full px-4 py-2 border rounded-md bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
                       errors.aadhaar ? 'border-red-500' : 'border-gray-300'
                     }`}
                     placeholder="Enter 12-digit Aadhaar number"
@@ -360,7 +350,7 @@ const AddNewPatient = () => {
                     name="bloodGroup"
                     value={formData.bloodGroup}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
                   >
                     <option value="">Select Blood Group</option>
                     <option value="A+">A+</option>
@@ -377,9 +367,9 @@ const AddNewPatient = () => {
             </div>
 
             {/* Address Information */}
-            <div className="mb-8">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <MapPin className="w-5 h-5 mr-2" />
+            <div className="mb-8 border-b border-gray-200 pb-8">
+              <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                <MapPin className="w-6 h-6 mr-3 text-blue-500" />
                 Address Information
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -393,7 +383,7 @@ const AddNewPatient = () => {
                     value={formData.address}
                     onChange={handleChange}
                     rows="3"
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    className={`w-full px-4 py-2 border rounded-md bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
                       errors.address ? 'border-red-500' : 'border-gray-300'
                     }`}
                     placeholder="Enter complete address"
@@ -411,7 +401,7 @@ const AddNewPatient = () => {
                     name="nativeState"
                     value={formData.nativeState}
                     onChange={handleChange}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    className={`w-full px-4 py-2 border rounded-md bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
                       errors.nativeState ? 'border-red-500' : 'border-gray-300'
                     }`}
                     placeholder="Enter native state"
@@ -429,7 +419,7 @@ const AddNewPatient = () => {
                     name="district"
                     value={formData.district}
                     onChange={handleChange}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    className={`w-full px-4 py-2 border rounded-md bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
                       errors.district ? 'border-red-500' : 'border-gray-300'
                     }`}
                     placeholder="Enter district"
@@ -447,7 +437,7 @@ const AddNewPatient = () => {
                     name="pincode"
                     value={formData.pincode}
                     onChange={handleChange}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    className={`w-full px-4 py-2 border rounded-md bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
                       errors.pincode ? 'border-red-500' : 'border-gray-300'
                     }`}
                     placeholder="Enter 6-digit pincode"
@@ -459,9 +449,9 @@ const AddNewPatient = () => {
             </div>
 
             {/* Emergency Contact */}
-            <div className="mb-8">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <Phone className="w-5 h-5 mr-2" />
+            <div className="mb-8 border-b border-gray-200 pb-8">
+              <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                <Phone className="w-6 h-6 mr-3 text-blue-500" />
                 Emergency Contact
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -475,7 +465,7 @@ const AddNewPatient = () => {
                     name="emergencyContactName"
                     value={formData.emergencyContactName}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
                     placeholder="Enter contact person name"
                   />
                 </div>
@@ -490,7 +480,7 @@ const AddNewPatient = () => {
                     name="emergencyContact"
                     value={formData.emergencyContact}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
                     placeholder="Enter emergency contact number"
                   />
                 </div>
@@ -499,9 +489,9 @@ const AddNewPatient = () => {
 
             {/* Worker-specific fields */}
             {patientType === 'worker' && (
-              <div className="mb-8">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                  <Briefcase className="w-5 h-5 mr-2" />
+              <div className="mb-8 border-b border-gray-200 pb-8">
+                <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                  <Briefcase className="w-6 h-6 mr-3 text-blue-500" />
                   Work Information
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -515,7 +505,7 @@ const AddNewPatient = () => {
                       name="workLocation"
                       value={formData.workLocation}
                       onChange={handleChange}
-                      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                      className={`w-full px-4 py-2 border rounded-md bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
                         errors.workLocation ? 'border-red-500' : 'border-gray-300'
                       }`}
                       placeholder="Enter work location"
@@ -533,7 +523,7 @@ const AddNewPatient = () => {
                       name="employerName"
                       value={formData.employerName}
                       onChange={handleChange}
-                      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                      className={`w-full px-4 py-2 border rounded-md bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
                         errors.employerName ? 'border-red-500' : 'border-gray-300'
                       }`}
                       placeholder="Enter employer name"
@@ -551,7 +541,7 @@ const AddNewPatient = () => {
                       name="jobType"
                       value={formData.jobType}
                       onChange={handleChange}
-                      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                      className={`w-full px-4 py-2 border rounded-md bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
                         errors.jobType ? 'border-red-500' : 'border-gray-300'
                       }`}
                       placeholder="Enter job type"
@@ -569,7 +559,7 @@ const AddNewPatient = () => {
                       name="workStartDate"
                       value={formData.workStartDate}
                       onChange={handleChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
                     />
                   </div>
                 </div>
@@ -578,8 +568,8 @@ const AddNewPatient = () => {
 
             {/* Health Information */}
             <div className="mb-8">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <FileText className="w-5 h-5 mr-2" />
+              <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                <FileText className="w-6 h-6 mr-3 text-blue-500" />
                 Health Information (Optional)
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -593,7 +583,7 @@ const AddNewPatient = () => {
                     value={formData.medicalHistory}
                     onChange={handleChange}
                     rows="3"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
                     placeholder="Enter any relevant medical history"
                   />
                 </div>
@@ -608,7 +598,7 @@ const AddNewPatient = () => {
                     value={formData.allergies}
                     onChange={handleChange}
                     rows="3"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
                     placeholder="Enter any known allergies"
                   />
                 </div>
@@ -623,7 +613,7 @@ const AddNewPatient = () => {
                     value={formData.medications}
                     onChange={handleChange}
                     rows="3"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
                     placeholder="Enter current medications"
                   />
                 </div>
@@ -638,7 +628,7 @@ const AddNewPatient = () => {
                     value={formData.vaccinations}
                     onChange={handleChange}
                     rows="3"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
                     placeholder="Enter vaccination history"
                   />
                 </div>
@@ -646,24 +636,26 @@ const AddNewPatient = () => {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex items-center justify-between pt-6 border-t">
+            <div className="flex items-center justify-end pt-6 space-x-4">
               <button
                 type="button"
                 onClick={() => navigate('/doctors')}
-                className="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
+                className="flex items-center px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-100 transition-colors font-semibold"
               >
+                <X className="w-4 h-4 mr-2" />
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                className={`px-6 py-2 rounded-md text-white font-medium transition-colors ${
+                className={`flex items-center px-6 py-2 rounded-md text-white font-medium transition-colors shadow-md hover:shadow-lg ${
                   loading 
                     ? 'bg-gray-400 cursor-not-allowed' 
                     : 'bg-blue-600 hover:bg-blue-700'
                 }`}
               >
-                {loading ? 'Adding Patient...' : `Add ${patientType === 'worker' ? 'Migrant Worker' : 'Patient'}`}
+                <Save className="w-4 h-4 mr-2" />
+                {loading ? 'Adding Patient...' : `Add ${patientType === 'worker' ? 'Worker' : 'Patient'}`}
               </button>
             </div>
           </form>

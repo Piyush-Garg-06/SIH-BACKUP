@@ -111,16 +111,16 @@ const HealthRecords = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
+      <div className="bg-blue-600 text-white shadow-lg">
         <div className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-blue-900">Medical Records</h1>
-              <p className="text-gray-600 mt-1">Access your complete health history and medical records</p>
+              <h1 className="text-4xl font-bold">Medical Records</h1>
+              <p className="text-blue-200 mt-1">Your complete health history at a glance.</p>
             </div>
             <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-500">Health ID:</span>
-              <span className="font-mono bg-blue-100 px-3 py-1 rounded text-blue-800">
+              <span className="text-sm text-blue-200">Health ID:</span>
+              <span className="font-mono bg-blue-700 px-3 py-1 rounded-full text-white">
                 {userProfile?.healthId || 'Not Generated'}
               </span>
             </div>
@@ -131,42 +131,42 @@ const HealthRecords = () => {
       <div className="container mx-auto px-4 py-8">
         {/* Quick Stats */}
         <div className="grid md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white p-6 rounded-lg shadow-sm border">
+          <div className="bg-white p-6 rounded-xl shadow-md border border-gray-200 hover:shadow-lg transition-shadow">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Total Records</p>
-                <p className="text-2xl font-bold text-gray-900">{medicalRecords.length}</p>
+                <p className="text-sm text-gray-500">Total Records</p>
+                <p className="text-3xl font-bold text-gray-800">{medicalRecords.length}</p>
               </div>
-              <FileText className="w-8 h-8 text-blue-600" />
+              <FileText className="w-10 h-10 text-blue-500" />
             </div>
           </div>
-          <div className="bg-white p-6 rounded-lg shadow-sm border">
+          <div className="bg-white p-6 rounded-xl shadow-md border border-gray-200 hover:shadow-lg transition-shadow">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Completed Checkups</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-sm text-gray-500">Completed Checkups</p>
+                <p className="text-3xl font-bold text-gray-800">
                   {medicalRecords.filter(r => r.diagnosis).length}
                 </p>
               </div>
-              <CheckCircle className="w-8 h-8 text-green-600" />
+              <CheckCircle className="w-10 h-10 text-green-500" />
             </div>
           </div>
-          <div className="bg-white p-6 rounded-lg shadow-sm border">
+          <div className="bg-white p-6 rounded-xl shadow-md border border-gray-200 hover:shadow-lg transition-shadow">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Upcoming Appointments</p>
-                <p className="text-2xl font-bold text-gray-900">{upcomingAppointments.length}</p>
+                <p className="text-sm text-gray-500">Upcoming Appointments</p>
+                <p className="text-3xl font-bold text-gray-800">{upcomingAppointments.length}</p>
               </div>
-              <Calendar className="w-8 h-8 text-purple-600" />
+              <Calendar className="w-10 h-10 text-purple-500" />
             </div>
           </div>
-          <div className="bg-white p-6 rounded-lg shadow-sm border">
+          <div className="bg-white p-6 rounded-xl shadow-md border border-gray-200 hover:shadow-lg transition-shadow">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Health Status</p>
-                <p className="text-2xl font-bold text-gray-900">Good</p>
+                <p className="text-sm text-gray-500">Health Status</p>
+                <p className="text-3xl font-bold text-green-600">Good</p>
               </div>
-              <Activity className="w-8 h-8 text-green-600" />
+              <Activity className="w-10 h-10 text-red-500" />
             </div>
           </div>
         </div>
@@ -174,16 +174,16 @@ const HealthRecords = () => {
         {/* Upcoming Appointments */}
         {upcomingAppointments && upcomingAppointments.length > 0 && (
           <div className="mb-8">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Upcoming Appointments</h2>
-            <div className="bg-white rounded-lg shadow-sm border">
+            <h2 className="text-2xl font-semibold text-gray-800 mb-4">Upcoming Appointments</h2>
+            <div className="bg-white rounded-xl shadow-md border border-gray-200">
               {upcomingAppointments.map((appointment) => (
-                <div key={appointment.id} className="p-6 border-b last:border-b-0">
+                <div key={appointment.id} className="p-6 border-b last:border-b-0 hover:bg-gray-50 transition-colors">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
-                      <Calendar className="w-6 h-6 text-blue-600" />
+                      <Calendar className="w-8 h-8 text-blue-500" />
                       <div>
-                        <h3 className="font-semibold text-gray-900">{appointment.type}</h3>
-                        <p className="text-sm text-gray-600">
+                        <h3 className="font-semibold text-lg text-gray-800">{appointment.type}</h3>
+                        <p className="text-sm text-gray-500">
                           {new Date(appointment.date).toLocaleDateString()} at {appointment.time}
                         </p>
                         <p className="text-sm text-gray-600">
@@ -192,10 +192,10 @@ const HealthRecords = () => {
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                      <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
                         {appointment.status}
                       </span>
-                      <button className="text-blue-600 hover:text-blue-800">
+                      <button className="text-blue-600 hover:text-blue-800 p-2 rounded-full hover:bg-blue-100 transition-colors">
                         <Eye className="w-5 h-5" />
                       </button>
                     </div>
@@ -208,47 +208,47 @@ const HealthRecords = () => {
 
         {/* Medical Records */}
         <div className="mb-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Medical History ({medicalRecords.length})</h2>
+          <h2 className="text-2xl font-semibold text-gray-800 mb-4">Medical History ({medicalRecords.length})</h2>
           <div className="space-y-6">
             {medicalRecords.map((record) => (
-              <div key={record._id} className="bg-white rounded-lg shadow-sm border">
+              <div key={record._id} className="bg-white rounded-xl shadow-md border border-gray-200 hover:shadow-lg transition-shadow">
                 <div className="p-6">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center space-x-4">
                       {getStatusIcon(record.status)}
                       <div>
-                        <h3 className="text-lg font-semibold text-gray-900">{record.diagnosis}</h3>
-                        <p className="text-sm text-gray-600">
+                        <h3 className="text-xl font-semibold text-gray-800">{record.diagnosis}</h3>
+                        <p className="text-sm text-gray-500">
                           {new Date(record.date).toLocaleDateString()} • {record.doctor.firstName} {record.doctor.lastName} ({record.doctor.specialization})
                         </p>
-                        <p className="text-sm text-gray-600">{record.hospitalName || 'N/A'}</p>
+                        <p className="text-sm text-gray-500">{record.hospitalName || 'N/A'}</p>
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">
                       <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${getSeverityColor(record.severity)}`}>
                         {record.severity || 'normal'}
                       </span>
-                      <button className="text-blue-600 hover:text-blue-800">
+                      <button className="text-blue-600 hover:text-blue-800 p-2 rounded-full hover:bg-blue-100 transition-colors">
                         <Download className="w-5 h-5" />
                       </button>
                     </div>
                   </div>
 
-                  <div className="grid md:grid-cols-2 gap-6">
+                  <div className="grid md:grid-cols-2 gap-6 py-4 border-t border-gray-200">
                     <div>
-                      <h4 className="font-semibold text-gray-900 mb-2">Symptoms</h4>
-                      <p className="text-gray-700">{record.symptoms}</p>
+                      <h4 className="font-semibold text-gray-700 mb-2">Symptoms</h4>
+                      <p className="text-gray-600">{record.symptoms}</p>
                     </div>
                     <div>
-                      <h4 className="font-semibold text-gray-900 mb-2">Treatment</h4>
-                      <p className="text-gray-700">{record.treatment}</p>
+                      <h4 className="font-semibold text-gray-700 mb-2">Treatment</h4>
+                      <p className="text-gray-600">{record.treatment}</p>
                     </div>
                   </div>
 
                   {record.prescriptions && record.prescriptions.length > 0 && (
                     <div className="mt-4">
-                      <h4 className="font-semibold text-gray-900 mb-2 flex items-center">
-                        <Pill className="w-4 h-4 mr-2" />
+                      <h4 className="font-semibold text-gray-700 mb-2 flex items-center">
+                        <Pill className="w-4 h-4 mr-2 text-blue-500" />
                         Prescriptions
                       </h4>
                       <div className="flex flex-wrap gap-2">
@@ -263,8 +263,8 @@ const HealthRecords = () => {
 
                   {record.tests && record.tests.length > 0 && (
                     <div className="mt-4">
-                      <h4 className="font-semibold text-gray-900 mb-2 flex items-center">
-                        <Stethoscope className="w-4 h-4 mr-2" />
+                      <h4 className="font-semibold text-gray-700 mb-2 flex items-center">
+                        <Stethoscope className="w-4 h-4 mr-2 text-green-500" />
                         Tests Conducted
                       </h4>
                       <div className="flex flex-wrap gap-2">
@@ -283,13 +283,13 @@ const HealthRecords = () => {
         </div>
 
         {/* Download All Records */}
-        <div className="bg-white p-6 rounded-lg shadow-sm border text-center">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Download Complete Health Records</h3>
-          <p className="text-gray-600 mb-4">
-            Get a comprehensive PDF report of all your medical records and history
+        <div className="bg-white p-8 rounded-xl shadow-md border border-gray-200 text-center">
+          <h3 className="text-2xl font-semibold text-gray-800 mb-2">Download Complete Health Records</h3>
+          <p className="text-gray-500 mb-6">
+            Get a comprehensive PDF report of all your medical records and history.
           </p>
-          <button className="bg-blue-600 text-white px-6 py-2 rounded-md font-medium hover:bg-blue-700 transition-colors" onClick={handleDownloadRecords}>
-            <Download className="w-5 h-5 inline mr-2" />
+          <button className="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors text-lg shadow-lg hover:shadow-xl" onClick={handleDownloadRecords}>
+            <Download className="w-6 h-6 inline mr-2" />
             Download All Records
           </button>
         </div>
