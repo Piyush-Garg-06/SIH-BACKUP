@@ -4,6 +4,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
+import WebSocketService from './services/webSocketService.js';
 
 import fs from 'fs';
 import path from 'path';
@@ -64,6 +65,8 @@ import notificationsRoutes from './routes/notifications.js';
 import adminRoutes from './routes/admin.js'; // Import admin routes
 import emitraRoutes from './routes/emitra.js'; // Import emitra routes
 import hospitalsRoutes from './routes/hospitals.js'; // Import hospitals routes
+import diseaseOutbreakRoutes from './routes/diseaseOutbreaks.js'; // Import disease outbreak routes
+import diseaseAlertRoutes from './routes/diseaseAlerts.js'; // Import disease alert routes
 
 app.use('/api/auth', authRoutes);
 app.use('/api/db', dbRoutes);
@@ -81,6 +84,8 @@ app.use('/api/notifications', notificationsRoutes);
 app.use('/api/admin', adminRoutes); // Use admin routes
 app.use('/api/emitra', emitraRoutes); // Use emitra routes
 app.use('/api/hospitals', hospitalsRoutes); // Use hospitals routes
+app.use('/api/disease-outbreaks', diseaseOutbreakRoutes); // Use disease outbreak routes
+app.use('/api/disease-alerts', diseaseAlertRoutes); // Use disease alert routes
 
 const PORT = process.env.PORT || 5000;
 
@@ -91,4 +96,8 @@ const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`  Network: http://192.168.1.68:${PORT}`);
 });
 
-export { app, server };
+// Initialize WebSocket service
+const webSocketService = new WebSocketService(server);
+
+// Export services for use in other modules
+export { app, server, webSocketService };

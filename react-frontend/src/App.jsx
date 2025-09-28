@@ -48,6 +48,13 @@ import DoctorAppointments from './pages/DoctorAppointments';
 import DoctorNotifications from './pages/DoctorNotifications';
 import ViewAppointment from './pages/ViewAppointment';
 
+// Import disease monitoring components
+import DiseaseOutbreakMonitoring from './pages/DiseaseOutbreakMonitoring';
+import DiseaseOutbreakDetail from './pages/DiseaseOutbreakDetail';
+import EditDiseaseOutbreak from './pages/EditDiseaseOutbreak';
+import HospitalDashboard from './pages/HospitalDashboard';
+import DiseaseMonitoringTest from './pages/DiseaseMonitoringTest';
+
 // Import new notification components
 import WorkerNotifications from './pages/WorkerNotifications';
 import NewAdminNotifications from './pages/AdminNotifications';
@@ -110,6 +117,14 @@ function App() {
                 <Route path="/doctor/appointments" element={<DoctorAppointments />} />
                 <Route path="/doctor-notifications" element={<DoctorNotifications />} />
                 <Route path="/doctor/appointments/:appointmentId" element={<ViewAppointment />} />
+                
+                {/* Disease monitoring routes */}
+                <Route path="/disease-outbreaks" element={<DiseaseOutbreakMonitoring />} />
+                <Route path="/disease-outbreaks/:outbreakId" element={<DiseaseOutbreakDetail />} />
+                <Route path="/disease-outbreaks/edit/:outbreakId" element={<EditDiseaseOutbreak />} />
+                <Route path="/disease-outbreaks/new" element={<EditDiseaseOutbreak />} />
+                <Route path="/hospital-dashboard" element={<HospitalDashboard />} />
+                <Route path="/disease-monitoring-test" element={<DiseaseMonitoringTest />} />
               </Route>
             </Routes>
           </main>

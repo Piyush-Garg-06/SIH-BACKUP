@@ -1,5 +1,5 @@
 import express from 'express';
-import { getHealthCard, getHealthInfoByQR, verifyHealthCard } from '../controllers/healthCardController.js';
+import { getHealthCard, getHealthInfoByQR, verifyHealthCard, downloadHealthCardPDF } from '../controllers/healthCardController.js';
 import auth from '../middleware/auth.js';
 
 const router = express.Router();
@@ -8,6 +8,11 @@ const router = express.Router();
 // @desc    Get health card data for a user (worker or patient)
 // @access  Private
 router.get('/:userId', auth, getHealthCard);
+
+// @route   GET api/health-cards/download/:userId
+// @desc    Download health card as PDF
+// @access  Private
+router.get('/download/:userId', auth, downloadHealthCardPDF);
 
 // @route   POST api/health-cards/scan
 // @desc    Get complete health information by scanning QR code

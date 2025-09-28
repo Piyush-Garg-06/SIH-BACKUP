@@ -3,10 +3,18 @@ import Patient from '../models/Patient.js';
 import User from '../models/User.js';
 import HealthRecord from '../models/HealthRecord.js';
 import healthCardService from '../services/healthCardService.js';
+import pdfService from '../services/pdfService.js';
 
 export const getHealthCard = async (req, res) => {
   try {
     const userId = req.params.userId;
+    
+    // Validate userId
+    if (!userId) {
+      return res.status(400).json({ msg: 'User ID is required' });
+    }
+
+    console.log('Searching for health card with user ID:', userId);
 
     // Try to find as a Worker
     let profile = await Worker.findOne({ user: userId });
@@ -19,11 +27,26 @@ export const getHealthCard = async (req, res) => {
     }
 
     if (!profile) {
+      // If still not found, try with the user ID directly (in case it's the profile ID)
+      profile = await Worker.findById(userId);
+      userType = 'worker';
+      
+      if (!profile) {
+        profile = await Patient.findById(userId);
+        userType = 'patient';
+      }
+    }
+
+    if (!profile) {
       return res.status(404).json({ msg: 'Health card profile not found for this user.' });
     }
 
+    console.log('Found profile:', profile);
+
     // Fetch the associated User to get email and possibly other details
-    const associatedUser = await User.findById(userId);
+    // If we found the profile by ID directly, we need to get the user ID from the profile
+    const userObjectId = profile.user || profile._id;
+    const associatedUser = await User.findById(userObjectId);
     if (!associatedUser) {
       return res.status(404).json({ msg: 'Associated user not found.' });
     }
@@ -51,7 +74,7 @@ export const getHealthCard = async (req, res) => {
     res.json({ data: healthCardData });
 
   } catch (err) {
-    console.error(err.message);
+    console.error('Error in getHealthCard:', err.message);
     res.status(500).send('Server Error');
   }
 };
@@ -283,6 +306,92 @@ export const verifyHealthCard = async (req, res) => {
 
   } catch (err) {
     console.error('Error in verifyHealthCard:', err.message);
+    res.status(500).json({ msg: 'Server Error', error: err.message });
+  }
+};
+
+// @route   GET api/health-cards/download/:userId
+// @desc    Download health card as PDF
+// @access  Private
+export const downloadHealthCardPDF = async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    
+    // Validate userId
+    if (!userId) {
+      return res.status(400).json({ msg: 'User ID is required' });
+    }
+
+    console.log('Searching for health card PDF with user ID:', userId);
+
+    // Try to find as a Worker
+    let profile = await Worker.findOne({ user: userId });
+    let userType = 'worker';
+
+    if (!profile) {
+      // If not found as Worker, try to find as a Patient
+      profile = await Patient.findOne({ user: userId });
+      userType = 'patient';
+    }
+
+    if (!profile) {
+      // If still not found, try with the user ID directly (in case it's the profile ID)
+      profile = await Worker.findById(userId);
+      userType = 'worker';
+      
+      if (!profile) {
+        profile = await Patient.findById(userId);
+        userType = 'patient';
+      }
+    }
+
+    if (!profile) {
+      return res.status(404).json({ msg: 'Health card profile not found for this user.' });
+    }
+
+    // Fetch the associated User to get email and possibly other details
+    // If we found the profile by ID directly, we need to get the user ID from the profile
+    const userObjectId = profile.user || profile._id;
+    const associatedUser = await User.findById(userObjectId);
+    if (!associatedUser) {
+      return res.status(404).json({ msg: 'Associated user not found.' });
+    }
+
+    // Prepare health card data
+    const healthCardData = {
+      healthId: profile.healthId || 'Not Generated',
+      name: `${profile.firstName} ${profile.lastName}`,
+      dateOfBirth: profile.dob,
+      bloodGroup: profile.bloodGroup || 'N/A',
+      mobile: profile.mobile || 'N/A',
+      email: associatedUser.email || 'N/A',
+      address: profile.address || 'N/A',
+      district: profile.district || 'N/A',
+      issueDate: new Date(),
+      validTill: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year validity
+      emergencyContact: profile.emergencyContact || profile.mobile || 'N/A'
+    };
+
+    console.log('Generating PDF with health card data:', healthCardData);
+
+    // Generate PDF buffer
+    const pdfBuffer = await pdfService.generateHealthCardPDFBuffer(healthCardData);
+    
+    console.log('PDF buffer generated, size:', pdfBuffer ? pdfBuffer.length : 'null');
+
+    if (!pdfBuffer) {
+      throw new Error('Failed to generate PDF buffer');
+    }
+
+    // Set headers for PDF download
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename=health-card-${healthCardData.healthId}.pdf`);
+
+    // Send PDF buffer
+    res.send(pdfBuffer);
+
+  } catch (err) {
+    console.error('Error generating health card PDF:', err.message);
     res.status(500).json({ msg: 'Server Error', error: err.message });
   }
 };
